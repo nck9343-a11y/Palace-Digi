@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Palace-Digi Hybrid V4.0_PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- 🌟 加载 Bmob SDK (国内云端引擎，极速秒开) -->
+    <script src="https://cdn.jsdelivr.net/npm/hydrogen-js-sdk/dist/Bmob-2.2.5.min.js"></script>
+
+    <style>
+        :root { --cyber-blue: #00E5FF; --dark-depth: #020617; }
+        
+        body { 
+            background-color: #020617 !important; 
+            color: #e2e8f0 !important; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background-image: radial-gradient(circle at 2px 2px, rgba(0, 229, 255, 0.05) 1px, transparent 0);
+            background-size: 30px 30px;
+        }
+
+        @media (max-width: 1024px) and (orientation: portrait) {
+            body::before {
+                content: "请旋转手机以进入 PALACE-DIGI 数字化终端";
+                position: fixed; inset: 0; background: var(--dark-depth);
+                color: var(--cyber-blue); z-index: 9999;
+                display: flex; align-items: center; justify-content: center;
+                font-family: 'Orbitron'; font-size: 1.2rem; text-align: center; padding: 20px;
+            }
+            #main-scaler { display: none !important; }
+        }
+
+        #main-scaler { 
+            width: 1600px; 
+            height: 900px; 
+            transform-origin: center; 
+            position: absolute; 
+            left: 50%; top: 50%;
+            margin-left: -800px; margin-top: -450px;
+            display: flex; 
+            flex-direction: column; 
+            padding: 30px; 
+            transition: transform 0.3s ease;
+        }
+
+        .glass-panel { 
+            background: rgba(10, 15, 30, 0.9) !important; 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(0, 229, 255, 0.2) !important; 
+            clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); 
+            box-shadow: inset 0 0 20px rgba(0,229,255,0.05);
+        }
+        
+        .laser-scan { 
+            position: absolute; width: 100%; height: 3px; 
+            background: linear-gradient(90deg, transparent, var(--cyber-blue), transparent); 
+            box-shadow: 0 0 15px var(--cyber-blue); 
+            animation: scan-move 4s linear infinite; 
+            z-index: 50; 
+        }
+        @keyframes scan-move { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        .img-scan-reveal { 
+            clip-path: inset(100% 0 0 0); 
+            animation: reveal 2s ease-out forwards, pulse-glow 2s infinite alternate 2s; 
+            filter: drop-shadow(0 0 10px rgba(0,229,255,0.5)); 
+        }
+        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+        @keyframes pulse-glow { 
+            from { filter: drop-shadow(0 0 5px rgba(0,229,255,0.4)); opacity: 0.9; } 
+            to { filter: drop-shadow(0 0 20px rgba(0,229,255,0.7)); opacity: 1; } 
+        }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .cursor { display: inline-block; width: 6px; height: 14px; background: var(--cyber-blue); animation: blink 0.8s infinite; vertical-align: middle; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        .drawer-panel {
+            position: fixed; top: 0; right: -450px; width: 400px; height: 100vh; 
+            background: rgba(10, 20, 30, 0.98); backdrop-filter: blur(20px); 
+            border-left: 2px solid #00f2ff; box-shadow: -10px 0 40px rgba(0, 242, 255, 0.2); 
+            transition: right 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 9999; 
+            font-family: 'Courier New', monospace; color: #e0f0ff; padding: 20px; box-sizing: border-box;
+            display: flex; flex-direction: column;
+        }
+        .drawer-panel.active { right: 0; }
+
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 15px; margin-bottom: 20px; }
+        .cyber-title { font-size: 18px; margin: 0; color: #00f2ff; text-shadow: 0 0 5px #00f2ff; }
+        .close-btn { background: transparent; border: 1px solid #ff3366; color: #ff3366; cursor: pointer; font-weight: bold; padding: 5px 10px; transition: 0.3s; }
+        .close-btn:hover { background: #ff3366; color: #000; box-shadow: 0 0 10px #ff3366;}
+
+        .satellite-box { width: 100%; height: 200px; background: #000; border: 1px solid #00f2ff; position: relative; overflow: hidden; margin-bottom: 25px; }
+        #drawer-map-img { width: 100%; height: 100%; object-fit: cover; filter: contrast(1.2) sepia(0.2) hue-rotate(180deg); }
+        .map-overlay { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); padding: 2px 5px; font-size: 10px; color: #00f2ff; }
+
+        .data-terminal { flex: 1; overflow-y: auto; }
+        .data-terminal .data-row { margin-bottom: 15px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .data-terminal label { display: block; font-size: 10px; color: #00e5ff; opacity: 0.8; margin-bottom: 2px; }
+        .code-font { font-size: 14px; letter-spacing: 1px; color: #fff; }
+
+        .progress-bar { width: 0%; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+
+    <div id="main-scaler">
+        <!-- 顶部信息栏 -->
+        <div class="flex justify-between items-end mb-6 border-b border-cyan-900/50 pb-4" style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(0,229,255,0.3); padding-bottom: 16px; margin-bottom: 24px;">
+            <div>
+                <h1 class="text-5xl font-black text-cyan-400 italic tracking-tighter" style="font-family: 'Orbitron'; color: #00E5FF; font-size: 48px; margin: 0;">PALACE-DIGI <span class="text-cyan-800 text-xl not-italic" style="color: #1e40af; font-size: 20px;">V4.0_CLOUD</span></h1>
+                <p class="text-[10px] text-cyan-700 font-mono tracking-[0.3em] mt-1 uppercase" style="color: #0369a1; font-family: monospace; font-size: 10px; letter-spacing: 0.3em; margin-top: 4px;">Operator: 王浦硕 | Mode: HYBRID_BMOB_CLOUD</p>
+            </div>
+            <div class="text-right font-mono text-[10px] text-cyan-900" style="text-align: right; color: #164e63; font-family: monospace; font-size: 10px;">
+                <div class="mb-2 flex gap-2 justify-end" style="margin-bottom: 8px; display: flex; gap: 8px; justify-content: flex-end;">
+                    <button onclick="toggleLang('zh')" id="btn-zh" class="px-2 py-1 border border-cyan-400 bg-cyan-400 text-black text-[9px] font-bold transition-all" style="border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;">ZH</button>
+                    <button onclick="toggleLang('en')" id="btn-en" class="px-2 py-1 border border-cyan-900 text-cyan-900 text-[9px] font-bold hover:border-cyan-400 transition-all" style="border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;">EN</button>
+                </div>
+                <p>GLOBAL_SYNC: <span id="sync-status" class="blink text-cyan-400">WAITING</span></p>
+                <p id="timestamp">SYNCING_TIME...</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-6 flex-1 overflow-hidden" style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; flex: 1; overflow: hidden;">
+            <!-- 左侧：云端缓存列表 -->
+            <div class="col-span-3 glass-panel p-5 flex flex-col overflow-hidden" style="grid-column: span 3; display: flex; flex-direction: column; overflow: hidden; padding: 20px;">
+                <!-- 遥控收割模块 -->
+                <div class="mb-4 border-b border-cyan-900/50 pb-4" style="margin-bottom: 16px; border-bottom: 1px solid rgba(0,229,255,0.2); padding-bottom: 16px;">
+                    <h2 class="text-cyan-500 text-[10px] font-bold mb-2 uppercase tracking-[0.1em] font-mono" style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em;"><i class="fas fa-satellite-dish mr-1"></i> Kali_Remote_Command</h2>
+                    <input type="text" id="searchInput" placeholder="输入并唤醒 Kali 收割..." class="w-full bg-slate-900/50 border border-cyan-900 text-cyan-400 text-xs font-mono p-2 mb-2 outline-none focus:border-cyan-400 transition-colors" style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid #164e63; color: #22d3ee; padding: 8px; margin-bottom: 8px; font-family: monospace; outline: none; box-sizing: border-box;">
+                    <button id="searchBtn" onclick="executeHarvest()" class="w-full bg-cyan-900/40 hover:bg-cyan-500 hover:text-black border border-cyan-500 text-cyan-500 text-[10px] font-bold py-2 font-mono transition-all tracking-widest cursor-pointer" style="width: 100%; background: rgba(22,78,99,0.4); border: 1px solid #06b6d4; color: #06b6d4; padding: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 0.1em; transition: 0.3s;">
+                        [ EXECUTE / 远程收割 ]
+                    </button>
+                </div>
+
+                <h2 class="text-cyan-800 text-[10px] font-bold mb-2 uppercase tracking-[0.2em] font-mono" style="color: #075985; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.2em;">Cloud_Asset_Nodes (国内云端底座)</h2>
+                <div id="file-list" class="space-y-2 overflow-y-auto pr-2 flex-1 scrollbar-hide" style="flex: 1; overflow-y: auto;">
+                    <!-- 动态加载云端数据 -->
+                </div>
+            </div>
+
+            <!-- 中间：视觉显示与主内容 -->
+            <div class="col-span-6 glass-panel p-6 flex flex-col items-center relative overflow-hidden bg-slate-950/80" style="grid-column: span 6; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; padding: 24px; background-color: rgba(2,6,23,0.9);">
+                <div id="visual-zone" class="w-full h-[400px] mb-4 border border-cyan-500/10 rounded-lg relative overflow-hidden flex items-center justify-center" style="width: 100%; height: 400px; margin-bottom: 16px; border: 1px solid rgba(0,229,255,0.1); border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; background: #000;">
+                    <div class="laser-scan"></div>
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(var(--cyber-blue) 1px, transparent 0); background-size: 30px 30px; position: absolute; inset: 0; opacity: 0.1;"></div>
+                    
+                    <div id="img-container" class="z-10 w-full h-full p-10 flex items-center justify-center" style="z-index: 10; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        <img id="main-img" src="" class="max-w-full max-h-full object-contain hidden filter contrast-125 saturate-50 drop-shadow-2xl" style="max-width: 90%; max-height: 90%; object-fit: contain; display: none;">
+                        <div id="no-img-msg" class="text-cyan-900 font-mono text-xs italic" style="color: #164e63; font-family: monospace; font-size: 12px; font-style: italic;">AWAITING_CLOUD_STREAM...</div>
+                    </div>
+
+                    <div class="absolute bottom-4 left-6 font-mono text-[9px] text-cyan-500 tracking-widest uppercase" style="position: absolute; bottom: 16px; left: 24px; font-family: monospace; font-size: 9px; color: #06b6d4; letter-spacing: 0.1em;">
+                        System_Signal: <span id="scan-state" class="text-white font-bold blink" style="color: #fff; font-weight: bold;">STANDBY</span>
+                    </div>
+                </div>
+                
+                <div class="w-full flex justify-between items-end mb-2" style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                    <h3 id="target-name" class="text-4xl font-black text-white italic tracking-[0.2em] uppercase" style="font-family: 'Orbitron'; font-size: 36px; font-weight: 900; color: #fff; font-style: italic; letter-spacing: 0.2em; margin: 0;">Project_Zero</h3>
+                    <button id="btn-open-drawer" onclick="document.getElementById('academic-drawer').classList.add('active')" class="hidden px-3 py-1 border border-cyan-500 text-cyan-500 text-[10px] hover:bg-cyan-500 hover:text-black font-mono transition-all cursor-pointer" style="display: none; border: 1px solid #06b6d4; color: #06b6d4; padding: 4px 12px; font-size: 10px; background: transparent; cursor: pointer;">VIEW_ARCHIVE ></button>
+                </div>
+                
+                <div id="content-display" class="flex-1 overflow-y-auto w-full text-sm text-cyan-100/70 font-light leading-relaxed scrollbar-hide border-t border-cyan-900/50 pt-4 text-justify" style="flex: 1; overflow-y: auto; width: 100%; font-size: 14px; color: rgba(207,250,254,0.7); font-weight: 300; line-height: 1.8; border-top: 1px solid rgba(0,229,255,0.2); padding-top: 16px; text-align: justify;"></div>
+            </div>
+
+            <!-- 右侧：数据流 -->
+            <div class="col-span-3 flex flex-col gap-4" style="grid-column: span 3; display: flex; flex-direction: column; gap: 16px;">
+                <div class="flex-1 glass-panel p-4 overflow-hidden flex flex-col" style="flex: 1; padding: 16px; display: flex; flex-direction: column; overflow: hidden;">
+                    <h2 class="text-cyan-500 text-[10px] font-bold mb-2 uppercase tracking-widest font-mono" style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; margin-top: 0;">Cloud_Metadata_Stream</h2>
+                    <pre id="json-stream" class="text-[9px] text-cyan-400/50 italic overflow-auto flex-1 scrollbar-hide leading-tight font-mono whitespace-pre-wrap word-break" style="font-size: 9px; color: rgba(34,211,238,0.5); font-style: italic; overflow: auto; flex: 1; line-height: 1.2; font-family: monospace; white-space: pre-wrap; word-break: break-all; margin: 0;">/* SYSTEM_READY... */</pre>
+                </div>
+                
+                <div class="h-32 glass-panel p-4 flex flex-col justify-center relative" style="height: 128px; padding: 16px; display: flex; flex-direction: column; justify-content: center; position: relative;">
+                    <div class="absolute top-2 right-2 text-cyan-900 text-[8px] font-mono" style="position: absolute; top: 8px; right: 8px; color: #164e63; font-size: 8px; font-family: monospace;">REMOTE: KALI_SERVER</div>
+                    <div class="text-[10px] text-cyan-400 mb-2 font-mono tracking-widest flex justify-between" style="font-size: 10px; color: #22d3ee; margin-bottom: 8px; font-family: monospace; display: flex; justify-content: space-between;">
+                        <span>CRAWL_STATUS</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-cyan-900/50" style="width: 100%; background: #0f172a; height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(22,78,99,0.5);">
+                        <div id="progress-bar" class="bg-cyan-400 h-full w-0 progress-bar shadow-[0_0_10px_#00e5ff]" style="background: #22d3ee; height: 100%; width: 0%; transition: width 0.3s; box-shadow: 0 0 10px #00e5ff;"></div>
+                    </div>
+                    <div id="npu-log" class="text-[8px] text-cyan-700 font-mono mt-2 h-3 overflow-hidden" style="font-size: 8px; color: #0369a1; font-family: monospace; margin-top: 8px; height: 12px; overflow: hidden;">Awaiting execution orders...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧抽屉 -->
+    <div id="academic-drawer" class="drawer-panel">
+        <div class="drawer-header">
+            <h2 class="cyber-title"><span class="blink">>>></span> ACADEMIC_ARCHIVE</h2>
+            <button class="close-btn" onclick="closeDrawer()">[ X ] CLOSE</button>
+        </div>
+
+        <div class="drawer-content flex-1 flex flex-col overflow-hidden">
+            <div class="satellite-box flex-shrink-0">
+                <div class="map-overlay">LIVE_SATELLITE_FEED</div>
+                <img id="drawer-map-img" src="" alt="SATELLITE_LOADING..." onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'><rect width=\'100%\' height=\'100%\' fill=\'%23000\'/><text x=\'50%\' y=\'50%\' fill=\'%2300f2ff\' font-family=\'monospace\' font-size=\'14\' text-anchor=\'middle\'>SIGNAL_LOST</text></svg>'">
+            </div>
+
+            <div class="data-terminal">
+                <div class="data-row">
+                    <label>TARGET_NAME:</label>
+                    <span id="drawer-name" class="code-font text-white font-bold uppercase">LOADING...</span>
+                </div>
+                <div class="data-row">
+                    <label>GLOBAL_COORDS (Lat, Lng):</label>
+                    <span id="drawer-coords" class="code-font text-cyan-300">00.000, 00.000</span>
+                </div>
+                <div class="data-row">
+                    <label>UNESCO / HERITAGE_REF_NO:</label>
+                    <span id="drawer-unesco" class="code-font text-yellow-400">---</span>
+                </div>
+                
+                <div class="mt-4 mb-2 border-b border-cyan-900/50 pb-1">
+                    <label class="text-[12px] text-cyan-400 font-bold">TECH_SPECIFICATIONS</label>
+                </div>
+                <div id="tech-cards-container">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-cyan-900/50 text-[10px] text-slate-500 font-mono flex justify-between">
+                <span>INTL_SOURCE: BMOB_CLOUD_VAULT</span>
+                <span style="color:#0f0;" class="blink">VERIFIED_SECURE</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🌟 1. 配置 Bmob 云端钥匙 (用于从云端拉取展示)
+        // 王浦硕，把你在 Bmob 后台拿到的 Application ID 和 REST API Key 填入这里
+        // ==========================================
+        const BMOB_APP_ID = "填写你的_Application_ID";
+        const BMOB_REST_KEY = "填写你的_REST_API_Key";
+        Bmob.initialize(BMOB_APP_ID, BMOB_REST_KEY);
+        const API_BASE = "https://64333a0e.r6.cpolar.top";       
+        const currentHost = window.location.hostname;
+        const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1") 
+            ? "http://localhost:5000" 
+            : "http://localhost:5000"; // 部署到外网前，务必改这里！
+        
+        let currentTimer = null;
+        let currentSimInt = null;
+        let currentData = null;
+        let currentLang = 'zh';
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('timestamp').innerText = now.toISOString().replace('T', ' ').substring(0, 19);
+        }, 1000);
+
+        function toggleLang(lang) {
+            if (currentLang === lang) return;
+            currentLang = lang;
+            
+            const btnZh = document.getElementById('btn-zh');
+            const btnEn = document.getElementById('btn-en');
+            
+            if (lang === 'zh') {
+                btnZh.style.cssText = "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
+                btnEn.style.cssText = "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
+            } else {
+                btnEn.style.cssText = "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
+                btnZh.style.cssText = "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
+            }
+            if (currentData) renderUI(currentData, true);
+        }
+
+        // 🌟 核心：从 Bmob 云端拉取数据库列表
+        async function loadDynamicCacheList() {
+            const list = document.getElementById('file-list');
+            list.innerHTML = `<div class="text-[10px] text-cyan-500 font-mono blink py-4 text-center">SCANNING_CLOUD_NODES...</div>`; 
+            
+            try {
+                const query = Bmob.Query("BuildingArchive");
+                query.order("-createdAt");
+                query.limit(100);
+                const results = await query.find();
+                
+                document.getElementById('sync-status').innerText = "ONLINE";
+                document.getElementById('sync-status').style.color = "#0f0";
+                list.innerHTML = ""; 
+                
+                if (results.length > 0) {
+                    results.forEach((item, idx) => {
+                        const b = item.payload; // Bmob 里存的 JSON
+                        const div = document.createElement('div');
+                        div.style.cssText = "padding: 12px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 8px; cursor: pointer; transition: 0.3s;";
+                        div.onmouseover = () => { div.style.borderColor = "#22d3ee"; div.style.background = "rgba(8, 145, 178, 0.3)"; };
+                        div.onmouseout = () => { div.style.borderColor = "rgba(6, 182, 212, 0.2)"; div.style.background = "rgba(8, 145, 178, 0.1)"; };
+                        
+                        const nodeID = item.objectId.substring(0, 6).toUpperCase();
+                        div.innerHTML = `
+                            <div style="font-size: 8px; color: #0369a1; font-family: monospace;">CLOUD_NODE_${nodeID}</div>
+                            <div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${b.name.zh}</div>
+                        `;
+                        // 🌟 点击云端节点，直接从内存中读取渲染，速度极快！
+                        div.onclick = () => renderUI(b, false);
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = `<div class="text-[10px] text-slate-500 italic p-2 text-center" style="color: #64748b; font-size: 10px; text-align: center;">NO_CLOUD_ARCHIVE_FOUND</div>`;
+                }
+            } catch (error) {
+                console.error("Bmob 云端连接失败:", error);
+                document.getElementById('sync-status').innerText = "OFFLINE";
+                document.getElementById('sync-status').style.color = "red";
+                list.innerHTML = `<div class="text-[10px] text-red-500 font-bold p-2 text-center" style="color: #ef4444; font-weight: bold; text-align: center;">CLOUD_SYNC_FAILED</div>`;
+            }
+        }
+
+        function executeHarvest() {
+            const searchInput = document.getElementById('searchInput');
+            const target = searchInput.value.trim();
+            if (!target) return;
+            
+            const btn = document.getElementById('searchBtn');
+            btn.innerText = "[ COMMAND_SENT... ]";
+            btn.style.pointerEvents = "none";
+            btn.style.opacity = "0.5";
+            btn.style.borderColor = "#ff3366";
+            btn.style.color = "#ff3366";
+            
+            console.log("🚀 唤醒 Kali 进行收割:", target, "目标网关:", API_BASE);
+            
+            fetchData(target, true).finally(() => {
+                btn.innerText = "[ EXECUTE / 远程收割 ]";
+                btn.style.pointerEvents = "auto";
+                btn.style.opacity = "1";
+                btn.style.borderColor = "#06b6d4";
+                btn.style.color = "#06b6d4";
+                searchInput.value = '';
+            });
+        }
+
+        async function fetchData(name, force = false) {
+            if (currentTimer) clearInterval(currentTimer);
+            if (currentSimInt) clearInterval(currentSimInt);
+            
+            document.getElementById('target-name').innerText = "REMOTE_UPLINK...";
+            document.getElementById('scan-state').innerText = "KALI_CRAWLER_ACTIVE";
+            document.getElementById('content-display').innerHTML = "";
+            document.getElementById('json-stream').innerText = "/* SENDING_COMMAND_TO_KALI... */";
+            document.getElementById('btn-open-drawer').style.display = 'none';
+            
+            let progress = 0;
+            const pBar = document.getElementById('progress-bar');
+            const pText = document.getElementById('progress-text');
+            const pLog = document.getElementById('npu-log');
+            
+            pLog.innerText = `> Kali Server: Crawling deep data for '${name}'...`;
+            
+            currentSimInt = setInterval(() => {
+                if (progress < 95) {
+                    progress += (Math.random() * 2); 
+                    if(progress > 95) progress = 95;
+                    pBar.style.width = `${progress}%`;
+                    pText.innerText = `${Math.floor(progress)}%`;
+                }
+            }, 800);
+
+            try {
+                // 呼叫 Kali 服务器进行收割
+                const res = await fetch(`${API_BASE}/api/trigger_crawl`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target: name, force: force })
+                });
+                
+                const data = await res.json();
+                clearInterval(currentSimInt);
+                
+                pBar.style.width = "100%";
+                pText.innerText = "100%";
+                pLog.innerText = "> Remote Harvest & Cloud Sync Complete.";
+
+                if (data.status !== "ERROR") {
+                    currentData = data.payload;
+                    renderUI(currentData, false);
+                    
+                    // 🌟 收割完成后，立刻刷新云端列表，展示最新成果
+                    if (data.status === "GENERATED") {
+                        setTimeout(loadDynamicCacheList, 1500); 
+                    }
+                } else {
+                    throw new Error("Kali 爬虫未能成功提取有效文献，或网络中断。");
+                }
+            } catch (err) {
+                clearInterval(currentSimInt);
+                console.error("❌ 拦截到网络或爬虫层错误:", err);
+                document.getElementById('target-name').innerText = "LINK_FAILED";
+                document.getElementById('content-display').innerText = `ERROR: 无法连接至 Kali 服务器。\n如果您在公网访问，请确保已配置 cpolar 内网穿透并更新 API_BASE。`;
+                document.getElementById('scan-state').innerText = "SIGNAL_LOST";
+                pLog.innerText = "> EXECUTION_FAILED";
+                pBar.style.width = "0%";
+                pText.innerText = "ERR";
+            }
+        }
+
+        function renderUI(item, skipAnimation) {
+            if (currentTimer) clearInterval(currentTimer);
+
+            let text = "DATA_CORRUPTED: 暂无相关历史档案";
+            if (item.content) {
+                text = item.content[currentLang] || item.content.zh || item.content || text;
+            }
+            
+            let targetName = "UNKNOWN_TARGET";
+            if (item.name) {
+                targetName = item.name[currentLang] || item.name.zh || item.name || targetName;
+            }
+
+            document.getElementById('target-name').innerText = targetName;
+            document.getElementById('json-stream').innerText = JSON.stringify(item, null, 2);
+            document.getElementById('btn-open-drawer').style.display = 'block';
+
+            const imgEl = document.getElementById('main-img');
+            const msgEl = document.getElementById('no-img-msg');
+            imgEl.style.display = 'none';
+            msgEl.style.display = 'block';
+            void imgEl.offsetWidth; 
+            
+            let lat = 39.917, lng = 116.391;
+            if (item.academic_proof && item.academic_proof.coordinates) {
+                lat = parseFloat(item.academic_proof.coordinates.lat) || lat;
+                lng = parseFloat(item.academic_proof.coordinates.lng) || lng;
+            }
+            imgEl.src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=16&l=sat`;
+
+            imgEl.onload = () => {
+                imgEl.classList.add('img-scan-reveal');
+                imgEl.style.display = 'block';
+                msgEl.style.display = 'none';
+                document.getElementById('scan-state').innerText = "DATA_STREAM_LOCKED";
+            };
+            
+            imgEl.onerror = () => {
+                imgEl.style.display = 'none';
+                msgEl.style.display = 'block';
+                msgEl.innerText = "SATELLITE_FEED_LOST (NETWORK_ERR)";
+                document.getElementById('scan-state').innerText = "AUDIO_ONLY_MODE";
+            };
+
+            const contentBox = document.getElementById('content-display');
+
+            if (skipAnimation) {
+                contentBox.innerHTML = text;
+                updateDrawer(item);
+            } else {
+                let i = 0;
+                currentTimer = setInterval(() => {
+                    if (i < text.length) {
+                        contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
+                        i++;
+                        contentBox.scrollTop = contentBox.scrollHeight;
+                    } else {
+                        clearInterval(currentTimer);
+                        const cursor = contentBox.querySelector('.cursor');
+                        if (cursor) cursor.style.display = 'none';
+                        updateDrawer(item); 
+                    }
+                }, 10); 
+            }
+        }
+
+        function updateDrawer(data) {
+            let displayName = "UNKNOWN";
+            if (data.name) displayName = data.name[currentLang] || data.name.zh || data.name;
+            document.getElementById('drawer-name').innerText = displayName;
+
+            const proof = data.academic_proof || {};
+            const coords = proof.coordinates || {};
+            document.getElementById('drawer-unesco').innerText = proof.heritage_registry_no || "PENDING_VERIFICATION";
+            
+            const latStr = coords.lat ? parseFloat(coords.lat).toFixed(4) : "0.0000";
+            const lngStr = coords.lng ? parseFloat(coords.lng).toFixed(4) : "0.0000";
+            document.getElementById('drawer-coords').innerText = `${latStr}, ${lngStr}`;
+            document.getElementById('drawer-map-img').src = `https://static-maps.yandex.ru/1.x/?ll=${lngStr},${latStr}&z=17&l=sat`;
+
+            const container = document.getElementById('tech-cards-container');
+            container.innerHTML = ""; 
+            if (data.tech_cards && Array.isArray(data.tech_cards) && data.tech_cards.length > 0) {
+                data.tech_cards.forEach(card => {
+                    const row = document.createElement('div');
+                    row.className = "data-row";
+                    const label = (card.label && card.label[currentLang]) ? card.label[currentLang] : (card.label?.zh || "Property");
+                    const value = (card.value && card.value[currentLang]) ? card.value[currentLang] : (card.value?.zh || "Unknown");
+                    row.innerHTML = `<label>${label}:</label><span class="code-font text-white">${value}</span>`;
+                    container.appendChild(row);
+                });
+            } else {
+                container.innerHTML = `<div class="text-[10px] text-cyan-900 italic">No technical specifications found.</div>`;
+            }
+        }
+
+        function closeDrawer() { document.getElementById('academic-drawer').classList.remove('active'); }
+
+        function init() {
+            // 初始化时从云端拉取展示柜内容
+            loadDynamicCacheList();
+            handleResize();
+            
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') executeHarvest();
+            });
+        }
+
+        function handleResize() {
+            const vW = window.innerWidth;
+            const vH = window.innerHeight;
+            const scale = Math.min(vW / 1600, vH / 900);
+            const scaler = document.getElementById('main-scaler');
+            if(scaler) scaler.style.transform = `scale(${scale * 0.95})`;
+        }
+
+        window.onload = init;
+        window.onresize = handleResize;
+    </script>
+</body>
+</html>
