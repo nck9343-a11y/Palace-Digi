@@ -241,306 +241,158 @@
 
     <script>
         // ==========================================
-        // 🌟 1. 核心配置区 (王浦硕专用 - 密钥已硬编码，无需再改)
-        // 完美修复：Bmob 2.0+ SDK 必须使用 Secret Key 和 API 安全码
+        // 🌟 核心引擎区：已彻底抛弃 Bmob SDK，采用原生协议流
+        // 王浦硕专用密钥，100% 直连物理服务器
         // ==========================================
-        const FINAL_SECRET_KEY = "1c53b315a94c3591"; // 绝对正确的 Secret Key
-        const FINAL_API_CODE = "c6aa64c596088d8d724243a98d53fcd6"; // 绝对正确的 API 安全码(REST API)
+        const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2"; 
+        const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6"; 
 
-        try {
-            Bmob.initialize(FINAL_SECRET_KEY, FINAL_API_CODE);
-            console.log("🚀 Bmob 引擎采用 v2.0 安全标准初始化成功！");
-        } catch (e) {
-            console.error("Bmob 初始化脚本发生错误: ", e);
-        }
-
-        // ==========================================
-        // 🌟 2. 遥控节点配置
-        // ==========================================
-        const currentHost = window.location.hostname;
-        const CPOLAR_URL = "https://54fb3d61.r9.cpolar.cn"; // 你最新的 cpolar 地址
-        const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1") 
+        const CPOLAR_URL = "https://54fb3d61.r9.cpolar.cn"; 
+        const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
             ? "http://localhost:5000" 
             : CPOLAR_URL;
         
-        let currentTimer = null;
-        let currentSimInt = null;
-        let currentData = null;
-        let currentLang = 'zh';
+        let currentTimer = null; let currentSimInt = null; let currentData = null; let currentLang = 'zh';
 
-        // 实时时钟
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('timestamp').innerText = now.toISOString().replace('T', ' ').substring(0, 19);
-        }, 1000);
+        setInterval(() => { document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19); }, 1000);
 
-        // 切换语言
-        function toggleLang(lang) {
-            if (currentLang === lang) return;
-            currentLang = lang;
-            
-            const btnZh = document.getElementById('btn-zh');
-            const btnEn = document.getElementById('btn-en');
-            
-            if (lang === 'zh') {
-                btnZh.style.cssText = "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
-                btnEn.style.cssText = "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
-            } else {
-                btnEn.style.cssText = "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
-                btnZh.style.cssText = "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;";
-            }
+        function toggleLang(l) {
+            currentLang = l;
+            document.getElementById('btn-zh').style.cssText = l === 'zh' ? "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; cursor: pointer;" : "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; cursor: pointer;";
+            document.getElementById('btn-en').style.cssText = l === 'en' ? "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; cursor: pointer;" : "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; cursor: pointer;";
             if (currentData) renderUI(currentData, true);
         }
 
-        // 🌟 核心：从 Bmob 云端拉取数据库列表
+        // 🌟 纯净原生 Fetch：没有 SDK 的干扰，速度极快
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
-            list.innerHTML = `<div style="font-size: 10px; color: #06b6d4; font-family: monospace; padding: 16px 0; text-align: center;" class="blink">SCANNING_CLOUD_NODES...</div>`; 
+            list.innerHTML = `<div class="blink" style="font-size: 10px; color: #06b6d4; text-align: center; padding: 20px;">SYNCING_CLOUD_DATA...</div>`;
             
             try {
-                const query = Bmob.Query("BuildingArchive");
-                query.order("-updatedAt");
-                query.limit(100);
-                const results = await query.find();
+                const bmobUrl = "https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=100";
+                const response = await fetch(bmobUrl, {
+                    method: 'GET',
+                    headers: {
+                        "X-Bmob-Application-Id": BMOB_APP_ID,
+                        "X-Bmob-REST-API-Key": BMOB_REST_KEY,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    const errInfo = await response.text();
+                    throw new Error(`Bmob拦截: ${errInfo}`);
+                }
                 
+                const data = await response.json();
+                const results = data.results || [];
+
                 document.getElementById('sync-status').innerText = "ONLINE";
                 document.getElementById('sync-status').style.color = "#0f0";
-                list.innerHTML = ""; 
-                
-                if (results.length > 0) {
-                    results.forEach((item) => {
-                        const b = item.payload; 
-                        const div = document.createElement('div');
-                        div.style.cssText = "padding: 12px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 8px; cursor: pointer; transition: 0.3s;";
-                        
-                        div.onmouseover = () => { div.style.borderColor = "#22d3ee"; div.style.background = "rgba(8, 145, 178, 0.3)"; };
-                        div.onmouseout = () => { div.style.borderColor = "rgba(6, 182, 212, 0.2)"; div.style.background = "rgba(8, 145, 178, 0.1)"; };
-                        
-                        const nodeID = item.objectId.substring(0, 6).toUpperCase();
-                        div.innerHTML = `
-                            <div style="font-size: 8px; color: #0369a1; font-family: monospace;">CLOUD_NODE_${nodeID}</div>
-                            <div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${b.name.zh}</div>
-                        `;
-                        div.onclick = () => renderUI(b, false);
-                        list.appendChild(div);
-                    });
-                } else {
-                    list.innerHTML = `<div style="color: #64748b; font-size: 10px; text-align: center; font-style: italic; padding: 8px;">NO_CLOUD_ARCHIVE_FOUND</div>`;
+                list.innerHTML = "";
+
+                if (results.length === 0) {
+                    list.innerHTML = `<div style="color: #64748b; font-size: 10px; text-align: center; padding: 8px;">CLOUD_DB_EMPTY</div>`;
+                    return;
                 }
-            } catch (error) {
-                console.error("Bmob 云端连接失败:", error);
+
+                results.forEach(item => {
+                    const b = item.payload;
+                    const div = document.createElement('div');
+                    div.style.cssText = "padding: 10px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 5px; cursor: pointer;";
+                    div.innerHTML = `<div style="font-size: 8px; color: #0369a1;">NODE_${item.objectId.slice(-4).toUpperCase()}</div><div style="font-size: 12px; margin-top:4px;">${b.name.zh}</div>`;
+                    div.onclick = () => renderUI(b, false);
+                    list.appendChild(div);
+                });
+            } catch (e) { 
+                console.error("云端拉取被中断: ", e); 
                 document.getElementById('sync-status').innerText = "OFFLINE";
                 document.getElementById('sync-status').style.color = "red";
-                list.innerHTML = `<div style="color: #ef4444; font-weight: bold; text-align: center; font-size: 10px; padding: 8px;">CLOUD_SYNC_FAILED</div>`;
+                list.innerHTML = `
+                    <div style="color: #ff3366; font-size: 10px; text-align: left; padding: 8px; background: rgba(255,51,102,0.1); border: 1px solid rgba(255,51,102,0.3);">
+                        <b>❌ 云端防御被拦截</b><br><br>
+                        原因：Bmob 后台开启了安全验证。<br>
+                        👉 <b>请去 Bmob 后台 -> [应用配置] 中关闭“API安全码”开关，然后刷新页面即可！</b>
+                    </div>
+                `;
             }
         }
 
         function executeHarvest() {
-            const searchInput = document.getElementById('searchInput');
-            const target = searchInput.value.trim();
-            if (!target) return;
-            
-            const btn = document.getElementById('searchBtn');
-            const originalText = btn.innerText;
-            btn.innerText = "[ COMMAND_SENT... ]";
-            btn.style.pointerEvents = "none";
-            btn.style.opacity = "0.5";
-            btn.style.borderColor = "#ff3366";
-            btn.style.color = "#ff3366";
-            
-            fetchData(target, true).finally(() => {
-                btn.innerText = originalText;
-                btn.style.pointerEvents = "auto";
-                btn.style.opacity = "1";
-                btn.style.borderColor = "#06b6d4";
-                btn.style.color = "#06b6d4";
-                searchInput.value = '';
-            });
+            const inp = document.getElementById('searchInput'); const target = inp.value.trim(); if (!target) return;
+            const btn = document.getElementById('searchBtn'); btn.innerText = "COMMAND_SENT"; btn.style.opacity = "0.5";
+            fetchData(target, true).finally(() => { btn.innerText = "[ EXECUTE ]"; btn.style.opacity = "1"; inp.value = ''; });
         }
 
-        async function fetchData(name, force = false) {
-            if (currentTimer) clearInterval(currentTimer);
-            if (currentSimInt) clearInterval(currentSimInt);
-            
-            document.getElementById('target-name').innerText = "REMOTE_UPLINK...";
-            document.getElementById('scan-state').innerText = "KALI_CRAWLER_ACTIVE";
+        async function fetchData(name, force) {
+            if (currentTimer) clearInterval(currentTimer); if (currentSimInt) clearInterval(currentSimInt);
+            document.getElementById('target-name').innerText = "UPLINKING...";
             document.getElementById('content-display').innerHTML = "";
-            document.getElementById('json-stream').innerText = "/* SENDING_COMMAND_TO_KALI... */";
-            document.getElementById('btn-open-drawer').style.display = 'none';
-            
-            let progress = 0;
-            const pBar = document.getElementById('progress-bar');
-            const pText = document.getElementById('progress-text');
-            const pLog = document.getElementById('npu-log');
-            
-            pLog.innerText = `> Kali Server: Crawling deep data for '${name}'...`;
-            
-            currentSimInt = setInterval(() => {
-                if (progress < 95) {
-                    progress += (Math.random() * 2); 
-                    if(progress > 95) progress = 95;
-                    pBar.style.width = `${progress}%`;
-                    pText.innerText = `${Math.floor(progress)}%`;
-                }
-            }, 800);
-
+            let progress = 0; const pBar = document.getElementById('progress-bar'); const pLog = document.getElementById('npu-log');
+            currentSimInt = setInterval(() => { if (progress < 95) { progress += Math.random() * 2; pBar.style.width = progress + "%"; document.getElementById('progress-text').innerText = Math.floor(progress) + "%"; } }, 800);
             try {
-                const res = await fetch(`${API_BASE}/api/trigger_crawl`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ target: name, force: force })
-                });
-                
+                const res = await fetch(`${API_BASE}/api/trigger_crawl`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: name, force: force }) });
                 const data = await res.json();
+                clearInterval(currentSimInt); pBar.style.width = "100%"; document.getElementById('progress-text').innerText = "100%";
+                if (data.status !== "ERROR") { currentData = data.payload; renderUI(currentData, false); setTimeout(loadDynamicCacheList, 1000); }
+            } catch (e) { 
                 clearInterval(currentSimInt);
-                
-                pBar.style.width = "100%";
-                pText.innerText = "100%";
-                pLog.innerText = "> Remote Harvest & Cloud Sync Complete.";
-
-                if (data.status !== "ERROR") {
-                    currentData = data.payload;
-                    renderUI(currentData, false);
-                    if (data.status === "GENERATED") {
-                        setTimeout(loadDynamicCacheList, 1500); 
-                    }
-                } else {
-                    throw new Error("Kali 爬虫未能成功提取有效文献。");
-                }
-            } catch (err) {
-                clearInterval(currentSimInt);
-                console.error("Fetch Error:", err);
-                
-                // 🌟 针对 CORS 跨域错误的智能捕获与提示
-                document.getElementById('target-name').innerText = "LINK_FAILED";
-                document.getElementById('scan-state').innerText = "CORS_BLOCKED";
-                pBar.style.width = "0%";
-                pText.innerText = "ERR";
-                
-                if (err.message.includes('Failed to fetch') || err.message.includes('CORS')) {
-                    pLog.innerText = "> ERR: CORS_PREFLIGHT_FAILED";
-                    document.getElementById('content-display').innerHTML = `
-                        <div style="color: #ff3366; font-weight: bold; margin-bottom: 10px;">⚠️ 侦测到内网穿透拦截 (CORS Blocked)</div>
-                        <div style="color: #cbd5e1; line-height: 1.6;">
-                            原因：cpolar 免费节点强制插入了“风险提示页”，阻断了纯数据流。<br><br>
-                            👉 <b>极客解锁方案：</b><br>
-                            1. 请在浏览器新建一个标签页。<br>
-                            2. 访问你的后端地址：<a href="${API_BASE}/api/cache_list" target="_blank" style="color: #00E5FF; text-decoration: underline;">${API_BASE}/api/cache_list</a><br>
-                            3. 如果看到 cpolar 的提示页面，点击<b>【Visit Site / 确认访问】</b>。<br>
-                            4. 回到本大屏，再次点击 [远程收割] 即可瞬间起飞！
-                        </div>
-                    `;
-                } else {
-                    pLog.innerText = "> EXECUTION_FAILED";
-                    document.getElementById('content-display').innerText = `ERROR: 无法连接至 Kali 服务器。\n请确保 Kali 已启动 server.py 并在 cpolar 后台确认隧道在线。`;
-                }
+                document.getElementById('scan-state').innerText = "SIGNAL_LOST"; 
+                pLog.innerText = "GATEWAY_TIMEOUT / CORS_BLOCK"; 
+                document.getElementById('content-display').innerHTML = `<div style="color: #ff3366; font-size: 12px; line-height: 1.8;">
+                    ⚠️ 连接到 Kali 网关失败 (网络阻断/CORS)。<br><br>
+                    <b>解决方法：</b><br>
+                    如果 cpolar 免费节点出现拦截，请在浏览器新建标签页访问：<br>
+                    <a href="${API_BASE}/api/cache_list" target="_blank" style="color:#00e5ff; text-decoration:underline;">${API_BASE}/api/cache_list</a><br>
+                    点击确认访问后，再回此页面重试。
+                </div>`;
             }
         }
 
-        function renderUI(item, skipAnimation) {
+        function renderUI(item, skip) {
             if (currentTimer) clearInterval(currentTimer);
-
-            const contentMap = item.content || {};
-            const text = contentMap[currentLang] || contentMap.zh || "DATA_CORRUPTED: 暂无相关历史档案";
-            
-            const nameMap = item.name || {};
-            const targetName = nameMap[currentLang] || nameMap.zh || "UNKNOWN_TARGET";
-
-            document.getElementById('target-name').innerText = targetName;
+            const text = item.content[currentLang] || item.content.zh || "暂无档案内容";
+            document.getElementById('target-name').innerText = item.name[currentLang] || item.name.zh || "未知";
             document.getElementById('json-stream').innerText = JSON.stringify(item, null, 2);
             document.getElementById('btn-open-drawer').style.display = 'block';
-
-            const imgEl = document.getElementById('main-img');
-            const msgEl = document.getElementById('no-img-msg');
+            const img = document.getElementById('main-img'); img.style.display = 'none';
             
-            imgEl.style.display = 'none';
-            imgEl.classList.remove('img-scan-reveal');
-            msgEl.style.display = 'block';
-            
-            let lat = 39.917, lng = 116.391;
-            if (item.academic_proof && item.academic_proof.coordinates) {
-                lat = parseFloat(item.academic_proof.coordinates.lat) || lat;
-                lng = parseFloat(item.academic_proof.coordinates.lng) || lng;
+            let lat = 39.9, lng = 116.4;
+            if(item.academic_proof && item.academic_proof.coordinates) {
+                lat = item.academic_proof.coordinates.lat; lng = item.academic_proof.coordinates.lng;
             }
-            
-            // 卫星图加载
-            imgEl.src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=16&l=sat`;
-
-            imgEl.onload = () => {
-                imgEl.classList.add('img-scan-reveal');
-                imgEl.style.display = 'block';
-                msgEl.style.display = 'none';
-                document.getElementById('scan-state').innerText = "DATA_STREAM_LOCKED";
-            };
-            
-            const contentBox = document.getElementById('content-display');
-            if (skipAnimation) {
-                contentBox.innerHTML = text;
-                updateDrawer(item);
-            } else {
-                let i = 0;
-                currentTimer = setInterval(() => {
-                    if (i < text.length) {
-                        contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
-                        i++;
-                        contentBox.scrollTop = contentBox.scrollHeight;
-                    } else {
-                        clearInterval(currentTimer);
-                        const cursor = contentBox.querySelector('.cursor');
-                        if (cursor) cursor.style.display = 'none';
-                        updateDrawer(item); 
-                    }
-                }, 10); 
+            img.src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=16&l=sat`;
+            img.onload = () => { img.style.display = 'block'; document.getElementById('no-img-msg').style.display = 'none'; img.classList.add('img-scan-reveal'); };
+            const box = document.getElementById('content-display');
+            if (skip) { box.innerHTML = text; updateDrawer(item); } else {
+                let i = 0; currentTimer = setInterval(() => { if (i < text.length) { box.innerHTML = text.slice(0, ++i) + '<span class="cursor"></span>'; } else { clearInterval(currentTimer); updateDrawer(item); } }, 15);
             }
         }
 
-        function updateDrawer(data) {
-            const nameMap = data.name || {};
-            const displayName = nameMap[currentLang] || nameMap.zh || "UNKNOWN";
-            document.getElementById('drawer-name').innerText = displayName;
-
-            const proof = data.academic_proof || {};
-            const coords = proof.coordinates || {};
-            document.getElementById('drawer-unesco').innerText = proof.heritage_registry_no || "PENDING_VERIFICATION";
-            
-            const latStr = coords.lat ? parseFloat(coords.lat).toFixed(4) : "0.0000";
-            const lngStr = coords.lng ? parseFloat(coords.lng).toFixed(4) : "0.0000";
-            document.getElementById('drawer-coords').innerText = `${latStr}, ${lngStr}`;
-            document.getElementById('drawer-map-img').src = `https://static-maps.yandex.ru/1.x/?ll=${lngStr},${latStr}&z=17&l=sat`;
-
-            const container = document.getElementById('tech-cards-container');
-            container.innerHTML = ""; 
-            if (data.tech_cards && Array.isArray(data.tech_cards)) {
-                data.tech_cards.forEach(card => {
-                    const row = document.createElement('div');
-                    row.className = "data-row";
-                    const label = (card.label && card.label[currentLang]) ? card.label[currentLang] : (card.label?.zh || "Property");
-                    const value = (card.value && card.value[currentLang]) ? card.value[currentLang] : (card.value?.zh || "Unknown");
-                    row.innerHTML = `<label>${label}:</label><span class="code-font">${value}</span>`;
-                    container.appendChild(row);
+        function updateDrawer(d) {
+            document.getElementById('drawer-name').innerText = d.name[currentLang] || d.name.zh;
+            if(d.academic_proof) {
+                document.getElementById('drawer-unesco').innerText = d.academic_proof.heritage_registry_no || "---";
+                if(d.academic_proof.coordinates) {
+                    document.getElementById('drawer-coords').innerText = `${d.academic_proof.coordinates.lat}, ${d.academic_proof.coordinates.lng}`;
+                    document.getElementById('drawer-map-img').src = `https://static-maps.yandex.ru/1.x/?ll=${d.academic_proof.coordinates.lng},${d.academic_proof.coordinates.lat}&z=17&l=sat`;
+                }
+            }
+            const c = document.getElementById('tech-cards-container'); c.innerHTML = "";
+            if(d.tech_cards) {
+                d.tech_cards.forEach(card => {
+                    const r = document.createElement('div'); r.className = "data-row";
+                    const label = card.label[currentLang] || card.label.zh;
+                    const value = card.value[currentLang] || card.value.zh;
+                    r.innerHTML = `<label>${label}:</label><span class="code-font">${value}</span>`;
+                    c.appendChild(r);
                 });
             }
         }
 
         function closeDrawer() { document.getElementById('academic-drawer').classList.remove('active'); }
-
-        function init() {
-            loadDynamicCacheList();
-            handleResize();
-            document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') executeHarvest();
-            });
-        }
-
-        function handleResize() {
-            const vW = window.innerWidth;
-            const vH = window.innerHeight;
-            const scale = Math.min(vW / 1600, vH / 900);
-            const scaler = document.getElementById('main-scaler');
-            if(scaler) scaler.style.transform = `scale(${scale * 0.95})`;
-        }
-
-        window.onload = init;
+        window.onload = () => { loadDynamicCacheList(); handleResize(); document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && executeHarvest()); };
+        function handleResize() { const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900); document.getElementById('main-scaler').style.transform = `scale(${s * 0.95})`; }
         window.onresize = handleResize;
     </script>
 </body>
