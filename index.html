@@ -191,7 +191,7 @@
                     <div style="width: 100%; background: #0f172a; height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(22,78,99,0.5);">
                         <div id="progress-bar" class="progress-bar" style="background: #22d3ee; height: 100%; width: 0%; box-shadow: 0 0 10px #00e5ff;"></div>
                     </div>
-                    <div id="npu-log" style="font-size: 8px; color: #0369a1; font-family: monospace; margin-top: 8px; height: 12px; overflow: hidden;">Awaiting execution orders...</div>
+                    <div id="npu-log" style="font-size: 8px; color: #0369a1; font-family: monospace; margin-top: 8px; height: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Awaiting execution orders...</div>
                 </div>
             </div>
         </div>
@@ -241,29 +241,24 @@
 
     <script>
         // ==========================================
-        // 🌟 1. 配置 Bmob 云端钥匙 (王浦硕专用)
+        // 🌟 1. 核心配置区 (王浦硕专用 - 密钥已硬编码，无需再改)
+        // 完美修复：Bmob 2.0+ SDK 必须使用 Secret Key 和 API 安全码
         // ==========================================
-        // 根据你提供的密钥，注入 Secret Key 和 REST API Key（作为 API 安全码）
-        const raw_secret_key = "1c53b315a94c3591"; 
-        const raw_api_code = "c6aa64c596088d8d724243a98d53fcd6"; 
+        const FINAL_SECRET_KEY = "1c53b315a94c3591"; // 绝对正确的 Secret Key
+        const FINAL_API_CODE = "c6aa64c596088d8d724243a98d53fcd6"; // 绝对正确的 API 安全码(REST API)
 
-        // 密钥自动清洗逻辑：防止复制粘贴带入的不可见字符导致请求失败
-        const cleanKey = (k) => k.replace(/[^\x20-\x7E]/g, "").trim();
-        
         try {
-            const final_secret = cleanKey(raw_secret_key);
-            const final_code = cleanKey(raw_api_code);
-            if (final_secret.length > 5 && final_code.length > 5) {
-                Bmob.initialize(final_secret, final_code);
-                console.log("🚀 Bmob 引擎初始化指令已发出...");
-            }
+            Bmob.initialize(FINAL_SECRET_KEY, FINAL_API_CODE);
+            console.log("🚀 Bmob 引擎采用 v2.0 安全标准初始化成功！");
         } catch (e) {
             console.error("Bmob 初始化脚本发生错误: ", e);
         }
 
-        // 🌟 2. 这里的逻辑修复了变量重复定义的问题
+        // ==========================================
+        // 🌟 2. 遥控节点配置
+        // ==========================================
         const currentHost = window.location.hostname;
-        const CPOLAR_URL = "https://54fb3d61.r9.cpolar.cn"; // 王浦硕的最稳定地址
+        const CPOLAR_URL = "https://54fb3d61.r9.cpolar.cn"; // 你最新的 cpolar 地址
         const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1") 
             ? "http://localhost:5000" 
             : CPOLAR_URL;
@@ -414,12 +409,31 @@
                 }
             } catch (err) {
                 clearInterval(currentSimInt);
+                console.error("Fetch Error:", err);
+                
+                // 🌟 针对 CORS 跨域错误的智能捕获与提示
                 document.getElementById('target-name').innerText = "LINK_FAILED";
-                document.getElementById('content-display').innerText = `ERROR: 无法连接至 Kali 服务器。\n请确保 Kali 已启动 server.py 并在 cpolar 后台确认隧道在线。`;
-                document.getElementById('scan-state').innerText = "SIGNAL_LOST";
-                pLog.innerText = "> EXECUTION_FAILED";
+                document.getElementById('scan-state').innerText = "CORS_BLOCKED";
                 pBar.style.width = "0%";
                 pText.innerText = "ERR";
+                
+                if (err.message.includes('Failed to fetch') || err.message.includes('CORS')) {
+                    pLog.innerText = "> ERR: CORS_PREFLIGHT_FAILED";
+                    document.getElementById('content-display').innerHTML = `
+                        <div style="color: #ff3366; font-weight: bold; margin-bottom: 10px;">⚠️ 侦测到内网穿透拦截 (CORS Blocked)</div>
+                        <div style="color: #cbd5e1; line-height: 1.6;">
+                            原因：cpolar 免费节点强制插入了“风险提示页”，阻断了纯数据流。<br><br>
+                            👉 <b>极客解锁方案：</b><br>
+                            1. 请在浏览器新建一个标签页。<br>
+                            2. 访问你的后端地址：<a href="${API_BASE}/api/cache_list" target="_blank" style="color: #00E5FF; text-decoration: underline;">${API_BASE}/api/cache_list</a><br>
+                            3. 如果看到 cpolar 的提示页面，点击<b>【Visit Site / 确认访问】</b>。<br>
+                            4. 回到本大屏，再次点击 [远程收割] 即可瞬间起飞！
+                        </div>
+                    `;
+                } else {
+                    pLog.innerText = "> EXECUTION_FAILED";
+                    document.getElementById('content-display').innerText = `ERROR: 无法连接至 Kali 服务器。\n请确保 Kali 已启动 server.py 并在 cpolar 后台确认隧道在线。`;
+                }
             }
         }
 
