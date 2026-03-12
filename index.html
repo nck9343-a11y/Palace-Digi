@@ -242,20 +242,20 @@
     <script>
         // ==========================================
         // 🌟 1. 配置 Bmob 云端钥匙 (王浦硕专用)
-        // ⚠️ 针对 Bmob 2.0+ SDK，请务必使用 [API 安全码 / Secret Key]
         // ==========================================
-        const raw_app_id = "d6f83c6438f18df723076957e3c280c2";
+        // 根据你提供的密钥，注入 Secret Key 和 REST API Key（作为 API 安全码）
         const raw_secret_key = "1c53b315a94c3591"; 
+        const raw_api_code = "c6aa64c596088d8d724243a98d53fcd6"; 
 
-        // 密钥自动清洗逻辑：防止复制粘贴带入的不可见字符导致 setRequestHeader 失败
+        // 密钥自动清洗逻辑：防止复制粘贴带入的不可见字符导致请求失败
         const cleanKey = (k) => k.replace(/[^\x20-\x7E]/g, "").trim();
         
-        const BMOB_APP_ID = cleanKey(raw_app_id);
-        const BMOB_REST_KEY = cleanKey(raw_secret_key);
-
         try {
-            if (BMOB_APP_ID.length > 5 && BMOB_REST_KEY.length > 5) {
-                Bmob.initialize(BMOB_APP_ID, BMOB_REST_KEY);
+            const final_secret = cleanKey(raw_secret_key);
+            const final_code = cleanKey(raw_api_code);
+            if (final_secret.length > 5 && final_code.length > 5) {
+                Bmob.initialize(final_secret, final_code);
+                console.log("🚀 Bmob 引擎初始化指令已发出...");
             }
         } catch (e) {
             console.error("Bmob 初始化脚本发生错误: ", e);
