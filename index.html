@@ -3,96 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Palace-Digi Hybrid V4.0_PRO</title>
+    <title>Palace-Digi Adaptive 3D Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- 🌟 加载 Bmob SDK (国内云端引擎) -->
     <script src="https://cdn.jsdelivr.net/npm/hydrogen-js-sdk/dist/Bmob-2.2.5.min.js"></script>
+    <!-- 🌟 引入 Three.js 3D 引擎 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
         :root { --cyber-blue: #00E5FF; --dark-depth: #020617; }
+        body { background-color: #020617 !important; color: #e2e8f0 !important; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; background-image: radial-gradient(circle at 2px 2px, rgba(0, 229, 255, 0.05) 1px, transparent 0); background-size: 30px 30px; }
         
-        body { 
-            background-color: #020617 !important; 
-            color: #e2e8f0 !important; 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
-            overflow: hidden; 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background-image: radial-gradient(circle at 2px 2px, rgba(0, 229, 255, 0.05) 1px, transparent 0);
-            background-size: 30px 30px;
-        }
-
-        /* 手机端旋转提示 */
         @media (max-width: 1024px) and (orientation: portrait) {
-            body::before {
-                content: "请旋转手机以进入 PALACE-DIGI 数字化终端";
-                position: fixed; inset: 0; background: var(--dark-depth);
-                color: var(--cyber-blue); z-index: 9999;
-                display: flex; align-items: center; justify-content: center;
-                font-family: 'Orbitron'; font-size: 1.2rem; text-align: center; padding: 20px;
-            }
+            body::before { content: "请旋转手机以进入 PALACE-DIGI 数字化终端"; position: fixed; inset: 0; background: var(--dark-depth); color: var(--cyber-blue); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 1.2rem; text-align: center; padding: 20px; }
             #main-scaler { display: none !important; }
         }
 
-        #main-scaler { 
-            width: 1600px; 
-            height: 900px; 
-            transform-origin: center; 
-            position: absolute; 
-            left: 50%; top: 50%;
-            margin-left: -800px; margin-top: -450px;
-            display: flex; 
-            flex-direction: column; 
-            padding: 30px; 
-            transition: transform 0.3s ease;
-        }
-
-        .glass-panel { 
-            background: rgba(10, 15, 30, 0.9) !important; 
-            backdrop-filter: blur(15px); 
-            border: 1px solid rgba(0, 229, 255, 0.2) !important; 
-            clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); 
-            box-shadow: inset 0 0 20px rgba(0,229,255,0.05);
-        }
+        #main-scaler { width: 1600px; height: 900px; transform-origin: center; position: absolute; left: 50%; top: 50%; margin-left: -800px; margin-top: -450px; display: flex; flex-direction: column; padding: 30px; transition: transform 0.3s ease; }
+        .glass-panel { background: rgba(10, 15, 30, 0.9) !important; backdrop-filter: blur(15px); border: 1px solid rgba(0, 229, 255, 0.2) !important; clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); box-shadow: inset 0 0 20px rgba(0,229,255,0.05); }
         
-        .laser-scan { 
-            position: absolute; width: 100%; height: 3px; 
-            background: linear-gradient(90deg, transparent, var(--cyber-blue), transparent); 
-            box-shadow: 0 0 15px var(--cyber-blue); 
-            animation: scan-move 4s linear infinite; 
-            z-index: 50; 
-        }
-        @keyframes scan-move { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-
-        .img-scan-reveal { 
-            clip-path: inset(100% 0 0 0); 
-            animation: reveal 2s ease-out forwards, pulse-glow 2s infinite alternate 2s; 
-            filter: drop-shadow(0 0 10px rgba(0,229,255,0.5)); 
-        }
-        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
-        @keyframes pulse-glow { 
-            from { filter: drop-shadow(0 0 5px rgba(0,229,255,0.4)); opacity: 0.9; } 
-            to { filter: drop-shadow(0 0 20px rgba(0,229,255,0.7)); opacity: 1; } 
-        }
+        /* 3D 全息投影专属样式 */
+        #hologram-container { width: 100%; height: 100%; position: absolute; inset: 0; z-index: 5; opacity: 0; transition: opacity 1s; }
+        .grid-overlay { position: absolute; inset: 0; background: linear-gradient(rgba(0, 229, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px); z-index: 1; opacity: 0.5; }
 
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .cursor { display: inline-block; width: 6px; height: 14px; background: var(--cyber-blue); animation: blink 0.8s infinite; vertical-align: middle; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         
-        .drawer-panel {
-            position: fixed; top: 0; right: -450px; width: 400px; height: 100vh; 
-            background: rgba(10, 20, 30, 0.98); backdrop-filter: blur(20px); 
-            border-left: 2px solid #00f2ff; box-shadow: -10px 0 40px rgba(0, 242, 255, 0.2); 
-            transition: right 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 9999; 
-            font-family: 'Courier New', monospace; color: #e0f0ff; padding: 20px; box-sizing: border-box;
-            display: flex; flex-direction: column;
-        }
+        .drawer-panel { position: fixed; top: 0; right: -450px; width: 400px; height: 100vh; background: rgba(10, 20, 30, 0.98); backdrop-filter: blur(20px); border-left: 2px solid #00f2ff; box-shadow: -10px 0 40px rgba(0, 242, 255, 0.2); transition: right 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 9999; font-family: 'Courier New', monospace; color: #e0f0ff; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
         .drawer-panel.active { right: 0; }
 
         .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 15px; margin-bottom: 20px; }
@@ -100,14 +41,11 @@
         .close-btn { background: transparent; border: 1px solid #ff3366; color: #ff3366; cursor: pointer; font-weight: bold; padding: 5px 10px; transition: 0.3s; }
         .close-btn:hover { background: #ff3366; color: #000; box-shadow: 0 0 10px #ff3366;}
 
-        .satellite-box { width: 100%; height: 200px; background: #000; border: 1px solid #00f2ff; position: relative; overflow: hidden; margin-bottom: 25px; }
-        #drawer-map-img { width: 100%; height: 100%; object-fit: cover; filter: contrast(1.2) sepia(0.2) hue-rotate(180deg); }
-        .map-overlay { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); padding: 2px 5px; font-size: 10px; color: #00f2ff; }
-
         .data-terminal { flex: 1; overflow-y: auto; }
-        .data-terminal .data-row { margin-bottom: 15px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px; }
-        .data-terminal label { display: block; font-size: 10px; color: #00e5ff; opacity: 0.8; margin-bottom: 2px; }
-        .code-font { font-size: 14px; letter-spacing: 1px; color: #fff; }
+        .data-terminal .data-row { margin-bottom: 12px; border-bottom: 1px dashed rgba(0,229,255,0.2); padding-bottom: 5px; display: flex; justify-content: space-between; align-items: flex-end;}
+        .data-terminal label { font-size: 10px; color: #00e5ff; opacity: 0.8; margin-bottom: 2px; }
+        .code-font { font-size: 14px; letter-spacing: 1px; color: #fff; text-align: right; max-width: 60%; word-wrap: break-word;}
+        .blueprint-tag { background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.5); padding: 2px 6px; font-size: 9px; border-radius: 2px; color: #00e5ff; }
 
         .progress-bar { width: 0%; transition: width 0.3s ease; }
         .blink { animation: blink-text 1.5s infinite; }
@@ -120,15 +58,11 @@
         <!-- 顶部信息栏 -->
         <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(0,229,255,0.3); padding-bottom: 16px; margin-bottom: 24px;">
             <div>
-                <h1 style="font-family: 'Orbitron'; color: #00E5FF; font-size: 48px; margin: 0; font-weight: 900; font-style: italic;">PALACE-DIGI <span style="color: #1e40af; font-size: 20px; font-style: normal;">V4.0_CLOUD</span></h1>
-                <p style="color: #0369a1; font-family: monospace; font-size: 10px; letter-spacing: 0.3em; margin-top: 4px; text-transform: uppercase;">Operator: 王浦硕 | Mode: HYBRID_BMOB_CLOUD</p>
+                <h1 style="font-family: 'Orbitron'; color: #00E5FF; font-size: 48px; margin: 0; font-weight: 900; font-style: italic;">PALACE-DIGI <span style="color: #1e40af; font-size: 20px; font-style: normal;">ADAPTIVE_PCG_ENGINE</span></h1>
+                <p style="color: #0369a1; font-family: monospace; font-size: 10px; letter-spacing: 0.3em; margin-top: 4px; text-transform: uppercase;">Operator: 王浦硕 | Mode: DYNAMIC_SCHEMA_EXTRACTION</p>
             </div>
             <div style="text-align: right; color: #164e63; font-family: monospace; font-size: 10px;">
-                <div style="margin-bottom: 8px; display: flex; gap: 8px; justify-content: flex-end;">
-                    <button onclick="toggleLang('zh')" id="btn-zh" style="border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;">ZH</button>
-                    <button onclick="toggleLang('en')" id="btn-en" style="border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; font-weight: bold; font-size: 9px; cursor: pointer;">EN</button>
-                </div>
-                <p>GLOBAL_SYNC: <span id="sync-status" class="blink" style="color: #22d3ee;">WAITING</span></p>
+                <p>ASSET_VAULT: <span id="sync-status" class="blink" style="color: #22d3ee;">WAITING</span></p>
                 <p id="timestamp">SYNCING_TIME...</p>
             </div>
         </div>
@@ -138,14 +72,14 @@
             <div class="glass-panel" style="grid-column: span 3; display: flex; flex-direction: column; overflow: hidden; padding: 20px;">
                 <!-- 遥控收割模块 -->
                 <div style="margin-bottom: 16px; border-bottom: 1px solid rgba(0,229,255,0.2); padding-bottom: 16px;">
-                    <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; font-family: monospace; text-transform: uppercase;"><i class="fas fa-satellite-dish" style="margin-right: 4px;"></i> Kali_Remote_Command</h2>
-                    <input type="text" id="searchInput" placeholder="输入并唤醒 Kali 收割..." style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid #164e63; color: #22d3ee; padding: 8px; margin-bottom: 8px; font-family: monospace; outline: none; box-sizing: border-box; font-size: 12px;">
+                    <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; font-family: monospace; text-transform: uppercase;"><i class="fas fa-cube" style="margin-right: 4px;"></i> Adaptive 3D Miner</h2>
+                    <input type="text" id="searchInput" placeholder="输入古建名 (支持桥梁/城墙/土楼)..." style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid #164e63; color: #22d3ee; padding: 8px; margin-bottom: 8px; font-family: monospace; outline: none; box-sizing: border-box; font-size: 12px;">
                     <button id="searchBtn" onclick="executeHarvest()" style="width: 100%; background: rgba(22,78,99,0.4); border: 1px solid #06b6d4; color: #06b6d4; padding: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 0.1em; transition: 0.3s; font-size: 10px; font-family: monospace;">
-                        [ EXECUTE / 远程收割 ]
+                        [ GENERATE PCG BLUEPRINT ]
                     </button>
                 </div>
 
-                <h2 style="color: #075985; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.2em; font-family: monospace; text-transform: uppercase;">Cloud_Asset_Nodes</h2>
+                <h2 style="color: #075985; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.2em; font-family: monospace; text-transform: uppercase;">Parametric_Assets_Cloud</h2>
                 <div id="file-list" class="scrollbar-hide" style="flex: 1; overflow-y: auto;">
                     <!-- 动态加载云端数据 -->
                 </div>
@@ -154,22 +88,22 @@
             <!-- 中间：视觉显示与主内容 -->
             <div class="glass-panel" style="grid-column: span 6; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; padding: 24px; background-color: rgba(2,6,23,0.9);">
                 <div id="visual-zone" style="width: 100%; height: 400px; margin-bottom: 16px; border: 1px solid rgba(0,229,255,0.1); border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; background: #000; overflow: hidden;">
-                    <div class="laser-scan"></div>
-                    <div style="background-image: radial-gradient(#00E5FF 1px, transparent 0); background-size: 30px 30px; position: absolute; inset: 0; opacity: 0.1;"></div>
                     
-                    <div id="img-container" style="z-index: 10; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                        <img id="main-img" src="" style="max-width: 90%; max-height: 90%; object-fit: contain; display: none;">
-                        <div id="no-img-msg" style="color: #164e63; font-family: monospace; font-size: 12px; font-style: italic;">AWAITING_CLOUD_STREAM...</div>
-                    </div>
+                    <div class="grid-overlay"></div>
+                    
+                    <!-- 🌟 替换为 3D 渲染容器 -->
+                    <div id="hologram-container"></div>
 
-                    <div style="position: absolute; bottom: 16px; left: 24px; font-family: monospace; font-size: 9px; color: #06b6d4; letter-spacing: 0.1em; text-transform: uppercase;">
-                        System_Signal: <span id="scan-state" class="blink" style="color: #fff; font-weight: bold;">STANDBY</span>
+                    <div id="no-img-msg" style="color: #164e63; font-family: monospace; font-size: 12px; font-style: italic; z-index: 10;">AWAITING_ADAPTIVE_PARAMETERS...</div>
+
+                    <div style="position: absolute; bottom: 16px; left: 24px; font-family: monospace; font-size: 9px; color: #06b6d4; letter-spacing: 0.1em; text-transform: uppercase; z-index: 10;">
+                        Asset_Status: <span id="scan-state" class="blink" style="color: #fff; font-weight: bold;">STANDBY</span>
                     </div>
                 </div>
                 
                 <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
                     <h3 id="target-name" style="font-family: 'Orbitron'; font-size: 36px; font-weight: 900; color: #fff; font-style: italic; letter-spacing: 0.2em; margin: 0; text-transform: uppercase;">Project_Zero</h3>
-                    <button id="btn-open-drawer" onclick="document.getElementById('academic-drawer').classList.add('active')" style="display: none; border: 1px solid #06b6d4; color: #06b6d4; padding: 4px 12px; font-size: 10px; background: transparent; cursor: pointer; font-family: monospace; transition: 0.3s;">VIEW_ARCHIVE ></button>
+                    <button id="btn-open-drawer" onclick="document.getElementById('academic-drawer').classList.add('active')" style="display: none; border: 1px solid #06b6d4; color: #06b6d4; padding: 4px 12px; font-size: 10px; background: transparent; cursor: pointer; font-family: monospace; transition: 0.3s;">VIEW_PCG_PARAMETERS ></button>
                 </div>
                 
                 <div id="content-display" class="scrollbar-hide" style="flex: 1; overflow-y: auto; width: 100%; font-size: 14px; color: rgba(207,250,254,0.7); font-weight: 300; line-height: 1.8; border-top: 1px solid rgba(0,229,255,0.2); padding-top: 16px; text-align: justify;"></div>
@@ -178,224 +112,372 @@
             <!-- 右侧：数据流 -->
             <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 16px;">
                 <div class="glass-panel" style="flex: 1; padding: 16px; display: flex; flex-direction: column; overflow: hidden;">
-                    <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; margin-top: 0; font-family: monospace; text-transform: uppercase;">Cloud_Metadata_Stream</h2>
-                    <pre id="json-stream" class="scrollbar-hide" style="font-size: 9px; color: rgba(34,211,238,0.5); font-style: italic; overflow: auto; flex: 1; line-height: 1.2; font-family: monospace; white-space: pre-wrap; word-break: break-all; margin: 0;">/* SYSTEM_READY... */</pre>
+                    <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; margin-top: 0; font-family: monospace; text-transform: uppercase;">Dynamic_JSON_Blueprint</h2>
+                    <pre id="json-stream" class="scrollbar-hide" style="font-size: 9px; color: rgba(34,211,238,0.5); font-style: italic; overflow: auto; flex: 1; line-height: 1.2; font-family: monospace; white-space: pre-wrap; word-break: break-all; margin: 0;">/* Awaiting Structural DNA... */</pre>
                 </div>
                 
                 <div class="glass-panel" style="height: 128px; padding: 16px; display: flex; flex-direction: column; justify-content: center; position: relative;">
-                    <div style="position: absolute; font-family: monospace; top: 8px; right: 8px; color: #164e63; font-size: 8px;">REMOTE: KALI_SERVER</div>
+                    <div style="position: absolute; font-family: monospace; top: 8px; right: 8px; color: #164e63; font-size: 8px;">AI_MINER: CORE_NODE</div>
                     <div style="font-size: 10px; color: #22d3ee; margin-bottom: 8px; font-family: monospace; display: flex; justify-content: space-between; letter-spacing: 0.1em;">
-                        <span>CRAWL_STATUS</span>
+                        <span>EXTRACTION_PROGRESS</span>
                         <span id="progress-text">0%</span>
                     </div>
                     <div style="width: 100%; background: #0f172a; height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(22,78,99,0.5);">
                         <div id="progress-bar" class="progress-bar" style="background: #22d3ee; height: 100%; width: 0%; box-shadow: 0 0 10px #00e5ff;"></div>
                     </div>
-                    <div id="npu-log" style="font-size: 8px; color: #0369a1; font-family: monospace; margin-top: 8px; height: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Awaiting execution orders...</div>
+                    <div id="npu-log" style="font-size: 8px; color: #0369a1; font-family: monospace; margin-top: 8px; height: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">System online...</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 右侧抽屉 -->
+    <!-- 右侧抽屉：展示提取出的 3D 建模参数 -->
     <div id="academic-drawer" class="drawer-panel">
         <div class="drawer-header">
-            <h2 class="cyber-title"><span class="blink">>>></span> ACADEMIC_ARCHIVE</h2>
+            <h2 class="cyber-title"><span class="blink">>>></span> UE5 / PCG BLUEPRINT</h2>
             <button class="close-btn" onclick="closeDrawer()">[ X ] CLOSE</button>
         </div>
 
         <div class="drawer-content" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-            <div class="satellite-box">
-                <div class="map-overlay">LIVE_SATELLITE_FEED</div>
-                <img id="drawer-map-img" src="" alt="SATELLITE_LOADING...">
+            <div style="padding: 10px; background: rgba(0,229,255,0.1); border: 1px solid #00e5ff; margin-bottom: 20px; font-size: 11px; line-height: 1.5;">
+                <i class="fas fa-microchip"></i> <b>Adaptive Procedural Generation:</b><br>
+                以下结构参数由核心大模型自动感知建筑类别（宫殿/城墙/土楼等）并动态提炼，直接输出适配该建筑类型的最优 3D 参数矩阵。
             </div>
 
             <div class="data-terminal">
-                <div class="data-row">
-                    <label>TARGET_NAME:</label>
-                    <span id="drawer-name" class="code-font uppercase" style="font-weight: bold;">LOADING...</span>
-                </div>
-                <div class="data-row">
-                    <label>GLOBAL_COORDS (Lat, Lng):</label>
-                    <span id="drawer-coords" class="code-font" style="color: #67e8f9;">00.000, 00.000</span>
-                </div>
-                <div class="data-row">
-                    <label>UNESCO / HERITAGE_REF_NO:</label>
-                    <span id="drawer-unesco" class="code-font" style="color: #facc15;">---</span>
+                <div class="data-row" style="border-bottom: 1px solid #00e5ff;">
+                    <label style="font-size: 12px;">ASSET_NAME:</label>
+                    <span id="drawer-name" class="code-font uppercase" style="font-weight: bold; color: #fff;">LOADING...</span>
                 </div>
                 
-                <div style="margin-top: 16px; margin-bottom: 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 4px;">
-                    <label style="font-size: 12px; color: #00f2ff; font-weight: bold;">TECH_SPECIFICATIONS</label>
+                <div style="margin-top: 20px; margin-bottom: 10px; display: flex; justify-content: space-between;">
+                    <label style="font-size: 12px; color: #00f2ff; font-weight: bold;">[ ADAPTIVE_ARCH_DNA ]</label>
+                    <span class="blueprint-tag">DYNAMIC_DATA</span>
                 </div>
-                <div id="tech-cards-container">
-                    <!-- 动态生成 -->
+                
+                <div id="pcg-dna-container">
+                    <!-- 动态生成 PCG 参数 -->
                 </div>
             </div>
             
-            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0,229,255,0.2); font-size: 10px; color: #64748b; font-family: monospace; display: flex; justify-content: space-between;">
-                <span>INTL_SOURCE: BMOB_CLOUD_VAULT</span>
-                <span style="color:#0f0;" class="blink">VERIFIED_SECURE</span>
-            </div>
+            <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(0,229,255,0.2); font-size: 10px; color: #64748b; font-family: monospace;">AWAITING UE5 DATASMITH EXPORT...</div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 🌟 核心引擎区：已彻底抛弃 Bmob SDK，采用原生协议流
-        // 王浦硕专用密钥，100% 直连物理服务器
+        // 🌟 1. 配置 Bmob 云端钥匙
         // ==========================================
-        const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2"; 
-        const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6"; 
+        const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2";
+        const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
+        Bmob.initialize(BMOB_APP_ID, BMOB_REST_KEY);
 
+        // 🌟 2. 这里的逻辑修复了变量重复定义的问题
+        const currentHost = window.location.hostname;
+        // 你最新的 cpolar 地址
         const CPOLAR_URL = "https://669b508c.r6.cpolar.top"; 
-        const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+        const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1") 
             ? "http://localhost:5000" 
             : CPOLAR_URL;
         
-        let currentTimer = null; let currentSimInt = null; let currentData = null; let currentLang = 'zh';
+        let currentTimer = null; let currentSimInt = null; let currentData = null;
 
-        setInterval(() => { document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19); }, 1000);
+        // 实时时钟
+        setInterval(() => {
+            document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        }, 1000);
 
-        function toggleLang(l) {
-            currentLang = l;
-            document.getElementById('btn-zh').style.cssText = l === 'zh' ? "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; cursor: pointer;" : "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; cursor: pointer;";
-            document.getElementById('btn-en').style.cssText = l === 'en' ? "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 8px; cursor: pointer;" : "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 8px; cursor: pointer;";
-            if (currentData) renderUI(currentData, true);
+        // ==========================================
+        // 🌟 3. Three.js 3D 全息渲染逻辑
+        // ==========================================
+        let scene, camera, renderer, ancientBuildingGroup;
+
+        function init3D() {
+            const container = document.getElementById('hologram-container');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 5, 12);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+
+            ancientBuildingGroup = new THREE.Group();
+            scene.add(ancientBuildingGroup);
+
+            // 赛博风格发光材质
+            const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.8 });
+            
+            // 使用抽象的几何组合代表生成过程
+            const coreGeo = new THREE.IcosahedronGeometry(2.5, 1);
+            const coreMesh = new THREE.Mesh(coreGeo, material);
+            coreMesh.position.y = 1.5;
+            ancientBuildingGroup.add(coreMesh);
+            
+            const ringGeo = new THREE.TorusGeometry(4, 0.1, 16, 100);
+            const ringMesh = new THREE.Mesh(ringGeo, material);
+            ringMesh.position.y = 1.5;
+            ringMesh.rotation.x = Math.PI / 2;
+            ancientBuildingGroup.add(ringMesh);
+
+            animate3D();
         }
 
-        // 🌟 纯净原生 Fetch：没有 SDK 的干扰，速度极快
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            if (ancientBuildingGroup) {
+                ancientBuildingGroup.children[0].rotation.y += 0.01;
+                ancientBuildingGroup.children[0].rotation.x += 0.005;
+                ancientBuildingGroup.children[1].rotation.z -= 0.02;
+            }
+            renderer.render(scene, camera);
+        }
+
+        // ==========================================
+        // 🌟 4. 数据拉取与渲染
+        // ==========================================
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
-            list.innerHTML = `<div class="blink" style="font-size: 10px; color: #06b6d4; text-align: center; padding: 20px;">SYNCING_CLOUD_DATA...</div>`;
+            list.innerHTML = `<div style="font-size: 10px; color: #06b6d4; font-family: monospace; padding: 16px 0; text-align: center;" class="blink">SCANNING_CLOUD_NODES...</div>`; 
             
             try {
-                const bmobUrl = "https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=100";
-                const response = await fetch(bmobUrl, {
-                    method: 'GET',
-                    headers: {
-                        "X-Bmob-Application-Id": BMOB_APP_ID,
-                        "X-Bmob-REST-API-Key": BMOB_REST_KEY,
-                        "Content-Type": "application/json"
-                    }
-                });
-
-                if (!response.ok) {
-                    const errInfo = await response.text();
-                    throw new Error(`Bmob拦截: ${errInfo}`);
-                }
+                const query = Bmob.Query("BuildingArchive");
+                query.order("-updatedAt");
+                query.limit(100);
+                const results = await query.find();
                 
-                const data = await response.json();
-                const results = data.results || [];
-
-                document.getElementById('sync-status').innerText = "ONLINE";
+                document.getElementById('sync-status').innerText = "DB_CONNECTED";
                 document.getElementById('sync-status').style.color = "#0f0";
-                list.innerHTML = "";
-
-                if (results.length === 0) {
-                    list.innerHTML = `<div style="color: #64748b; font-size: 10px; text-align: center; padding: 8px;">CLOUD_DB_EMPTY</div>`;
-                    return;
+                list.innerHTML = ""; 
+                
+                if (results.length > 0) {
+                    results.forEach((item) => {
+                        const b = item.payload; 
+                        const div = document.createElement('div');
+                        div.style.cssText = "padding: 12px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 8px; cursor: pointer; transition: 0.3s;";
+                        
+                        div.onmouseover = () => { div.style.borderColor = "#22d3ee"; div.style.background = "rgba(8, 145, 178, 0.3)"; };
+                        div.onmouseout = () => { div.style.borderColor = "rgba(6, 182, 212, 0.2)"; div.style.background = "rgba(8, 145, 178, 0.1)"; };
+                        
+                        const nodeID = item.objectId.substring(0, 6).toUpperCase();
+                        div.innerHTML = `
+                            <div style="font-size: 8px; color: #0369a1; font-family: monospace;">ASSET_ID: ${nodeID}</div>
+                            <div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${b.name.zh}</div>
+                        `;
+                        div.onclick = () => renderUI(b, false);
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = `<div style="color: #64748b; font-size: 10px; text-align: center; font-style: italic; padding: 8px;">NO_CLOUD_ARCHIVE_FOUND</div>`;
                 }
-
-                results.forEach(item => {
-                    const b = item.payload;
-                    const div = document.createElement('div');
-                    div.style.cssText = "padding: 10px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 5px; cursor: pointer;";
-                    div.innerHTML = `<div style="font-size: 8px; color: #0369a1;">NODE_${item.objectId.slice(-4).toUpperCase()}</div><div style="font-size: 12px; margin-top:4px;">${b.name.zh}</div>`;
-                    div.onclick = () => renderUI(b, false);
-                    list.appendChild(div);
-                });
-            } catch (e) { 
-                console.error("云端拉取被中断: ", e); 
+            } catch (error) {
+                console.error("Bmob 云端连接失败:", error);
                 document.getElementById('sync-status').innerText = "OFFLINE";
                 document.getElementById('sync-status').style.color = "red";
-                list.innerHTML = `
-                    <div style="color: #ff3366; font-size: 10px; text-align: left; padding: 8px; background: rgba(255,51,102,0.1); border: 1px solid rgba(255,51,102,0.3);">
-                        <b>❌ 云端防御被拦截</b><br><br>
-                        原因：Bmob 后台开启了安全验证。<br>
-                        👉 <b>请去 Bmob 后台 -> [应用配置] 中关闭“API安全码”开关，然后刷新页面即可！</b>
-                    </div>
-                `;
+                list.innerHTML = `<div style="color: #ef4444; font-weight: bold; text-align: center; font-size: 10px; padding: 8px;">CLOUD_SYNC_FAILED</div>`;
             }
         }
 
         function executeHarvest() {
-            const inp = document.getElementById('searchInput'); const target = inp.value.trim(); if (!target) return;
-            const btn = document.getElementById('searchBtn'); btn.innerText = "COMMAND_SENT"; btn.style.opacity = "0.5";
-            fetchData(target, true).finally(() => { btn.innerText = "[ EXECUTE ]"; btn.style.opacity = "1"; inp.value = ''; });
+            const searchInput = document.getElementById('searchInput');
+            const target = searchInput.value.trim();
+            if (!target) return;
+            
+            const btn = document.getElementById('searchBtn');
+            btn.innerText = "EXTRACTING...";
+            btn.style.pointerEvents = "none";
+            btn.style.opacity = "0.5";
+
+            // 隐藏3D模型，显示等待区
+            document.getElementById('hologram-container').style.opacity = "0";
+            document.getElementById('no-img-msg').style.display = "block";
+            
+            fetchData(target, true).finally(() => {
+                btn.innerText = "[ GENERATE PCG BLUEPRINT ]";
+                btn.style.pointerEvents = "auto";
+                btn.style.opacity = "1";
+                searchInput.value = '';
+            });
         }
 
-        async function fetchData(name, force) {
-            if (currentTimer) clearInterval(currentTimer); if (currentSimInt) clearInterval(currentSimInt);
-            document.getElementById('target-name').innerText = "UPLINKING...";
+        async function fetchData(name, force = false) {
+            if (currentTimer) clearInterval(currentTimer);
+            if (currentSimInt) clearInterval(currentSimInt);
+            
+            document.getElementById('target-name').innerText = "REMOTE_UPLINK...";
+            document.getElementById('scan-state').innerText = "CORE_NODE_ACTIVE";
             document.getElementById('content-display').innerHTML = "";
-            let progress = 0; const pBar = document.getElementById('progress-bar'); const pLog = document.getElementById('npu-log');
-            currentSimInt = setInterval(() => { if (progress < 95) { progress += Math.random() * 2; pBar.style.width = progress + "%"; document.getElementById('progress-text').innerText = Math.floor(progress) + "%"; } }, 800);
+            document.getElementById('json-stream').innerText = "/* SENDING_COMMAND_TO_CORE... */";
+            document.getElementById('btn-open-drawer').style.display = 'none';
+            
+            let progress = 0;
+            const pBar = document.getElementById('progress-bar');
+            const pText = document.getElementById('progress-text');
+            const pLog = document.getElementById('npu-log');
+            
+            pLog.innerText = `> Remote Server: Extracting dimensions for '${name}'...`;
+            
+            currentSimInt = setInterval(() => {
+                if (progress < 95) {
+                    progress += (Math.random() * 5); 
+                    if(progress > 95) progress = 95;
+                    pBar.style.width = `${progress}%`;
+                    pText.innerText = `${Math.floor(progress)}%`;
+                }
+            }, 800);
+
             try {
-                const res = await fetch(`${API_BASE}/api/trigger_crawl`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: name, force: force }) });
+                const res = await fetch(`${API_BASE}/api/trigger_crawl`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target: name, force: force })
+                });
+                
                 const data = await res.json();
-                clearInterval(currentSimInt); pBar.style.width = "100%"; document.getElementById('progress-text').innerText = "100%";
-                if (data.status !== "ERROR") { currentData = data.payload; renderUI(currentData, false); setTimeout(loadDynamicCacheList, 1000); }
-            } catch (e) { 
                 clearInterval(currentSimInt);
-                document.getElementById('scan-state').innerText = "SIGNAL_LOST"; 
-                pLog.innerText = "GATEWAY_TIMEOUT / CORS_BLOCK"; 
-                document.getElementById('content-display').innerHTML = `<div style="color: #ff3366; font-size: 12px; line-height: 1.8;">
-                    ⚠️ 连接到 Kali 网关失败 (网络阻断/CORS)。<br><br>
-                    <b>解决方法：</b><br>
-                    如果 cpolar 免费节点出现拦截，请在浏览器新建标签页访问：<br>
-                    <a href="${API_BASE}/api/cache_list" target="_blank" style="color:#00e5ff; text-decoration:underline;">${API_BASE}/api/cache_list</a><br>
-                    点击确认访问后，再回此页面重试。
-                </div>`;
+                
+                pBar.style.width = "100%";
+                pText.innerText = "100%";
+                pLog.innerText = "> Extraction & Cloud Sync Complete.";
+
+                if (data.status !== "ERROR") {
+                    currentData = data.payload;
+                    renderUI(currentData, false);
+                    if (data.status === "GENERATED") {
+                        setTimeout(loadDynamicCacheList, 1500); 
+                    }
+                } else {
+                    throw new Error("提取失败");
+                }
+            } catch (err) {
+                clearInterval(currentSimInt);
+                document.getElementById('target-name').innerText = "LINK_FAILED";
+                document.getElementById('content-display').innerText = `ERROR: 无法连接至底层算力网关。\n请确保 Kali 已启动 server.py 并更新了 cpolar 地址。`;
+                document.getElementById('scan-state').innerText = "SIGNAL_LOST";
+                pLog.innerText = "> EXECUTION_FAILED";
+                pBar.style.width = "0%";
+                pText.innerText = "ERR";
             }
         }
 
-        function renderUI(item, skip) {
+        function renderUI(item, skipAnimation) {
             if (currentTimer) clearInterval(currentTimer);
-            const text = item.content[currentLang] || item.content.zh || "暂无档案内容";
-            document.getElementById('target-name').innerText = item.name[currentLang] || item.name.zh || "未知";
+
+            const contentMap = item.content || {};
+            const text = contentMap.zh || "DATA_CORRUPTED: 暂无相关历史档案";
+            const targetName = item.name?.zh || "UNKNOWN_TARGET";
+
+            document.getElementById('target-name').innerText = targetName;
             document.getElementById('json-stream').innerText = JSON.stringify(item, null, 2);
             document.getElementById('btn-open-drawer').style.display = 'block';
-            const img = document.getElementById('main-img'); img.style.display = 'none';
+
+            // 🌟 动画展示 3D 全息模型
+            document.getElementById('no-img-msg').style.display = 'none';
+            document.getElementById('hologram-container').style.opacity = "1";
+            document.getElementById('scan-state').innerText = "ADAPTIVE_MODEL_GENERATED";
+            document.getElementById('scan-state').style.color = "#0f0";
             
-            let lat = 39.9, lng = 116.4;
-            if(item.academic_proof && item.academic_proof.coordinates) {
-                lat = item.academic_proof.coordinates.lat; lng = item.academic_proof.coordinates.lng;
-            }
-            img.src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=16&l=sat`;
-            img.onload = () => { img.style.display = 'block'; document.getElementById('no-img-msg').style.display = 'none'; img.classList.add('img-scan-reveal'); };
-            const box = document.getElementById('content-display');
-            if (skip) { box.innerHTML = text; updateDrawer(item); } else {
-                let i = 0; currentTimer = setInterval(() => { if (i < text.length) { box.innerHTML = text.slice(0, ++i) + '<span class="cursor"></span>'; } else { clearInterval(currentTimer); updateDrawer(item); } }, 15);
+            const contentBox = document.getElementById('content-display');
+            if (skipAnimation) {
+                contentBox.innerHTML = text;
+                updateDrawer(item);
+            } else {
+                let i = 0;
+                currentTimer = setInterval(() => {
+                    if (i < text.length) {
+                        contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
+                        i++;
+                        contentBox.scrollTop = contentBox.scrollHeight;
+                    } else {
+                        clearInterval(currentTimer);
+                        const cursor = contentBox.querySelector('.cursor');
+                        if (cursor) cursor.style.display = 'none';
+                        updateDrawer(item); 
+                    }
+                }, 15); 
             }
         }
 
-        function updateDrawer(d) {
-            document.getElementById('drawer-name').innerText = d.name[currentLang] || d.name.zh;
-            if(d.academic_proof) {
-                document.getElementById('drawer-unesco').innerText = d.academic_proof.heritage_registry_no || "---";
-                if(d.academic_proof.coordinates) {
-                    document.getElementById('drawer-coords').innerText = `${d.academic_proof.coordinates.lat}, ${d.academic_proof.coordinates.lng}`;
-                    document.getElementById('drawer-map-img').src = `https://static-maps.yandex.ru/1.x/?ll=${d.academic_proof.coordinates.lng},${d.academic_proof.coordinates.lat}&z=17&l=sat`;
-                }
-            }
-            const c = document.getElementById('tech-cards-container'); c.innerHTML = "";
-            if(d.tech_cards) {
-                d.tech_cards.forEach(card => {
-                    const r = document.createElement('div'); r.className = "data-row";
-                    const label = card.label[currentLang] || card.label.zh;
-                    const value = card.value[currentLang] || card.value.zh;
-                    r.innerHTML = `<label>${label}:</label><span class="code-font">${value}</span>`;
-                    c.appendChild(r);
+        function updateDrawer(data) {
+            const displayName = data.name?.zh || "UNKNOWN";
+            document.getElementById('drawer-name').innerText = displayName;
+
+            const container = document.getElementById('pcg-dna-container');
+            container.innerHTML = ""; 
+            
+            // 🌟 核心：解析后端传来的全新 pcg_dna 数组
+            const dnaList = data.pcg_dna || [];
+            
+            if (Array.isArray(dnaList) && dnaList.length > 0) {
+                dnaList.forEach(p => {
+                    const row = document.createElement('div');
+                    row.className = "data-row";
+                    const label = p.label_zh || "参数";
+                    const code = p.param_name || "UNKNOWN_VAR";
+                    const value = p.value || "---";
+                    row.innerHTML = `<label>${label} <br/><span style="color:#64748b;">${code}</span></label><span class="code-font" style="color: #00e5ff; font-weight: bold;">${value}</span>`;
+                    container.appendChild(row);
                 });
+            } else if (data.tech_cards) {
+                // 向下兼容旧版数据
+                data.tech_cards.forEach(card => {
+                    const row = document.createElement('div');
+                    row.className = "data-row";
+                    const label = card.label?.zh || "属性";
+                    const value = card.value?.zh || "---";
+                    row.innerHTML = `<label>${label}</label><span class="code-font">${value}</span>`;
+                    container.appendChild(row);
+                });
+            } else {
+                container.innerHTML = `<div class="data-row"><span class="code-font" style="color: #ff3366;">未能提取到有效的 3D 参数矩阵</span></div>`;
+            }
+
+            // 追加地理坐标
+            if (data.academic_proof && data.academic_proof.coordinates) {
+                const coords = data.academic_proof.coordinates;
+                const latStr = coords.lat ? parseFloat(coords.lat).toFixed(4) : "0.0000";
+                const lngStr = coords.lng ? parseFloat(coords.lng).toFixed(4) : "0.0000";
+                
+                const geoRow = document.createElement('div');
+                geoRow.className = "data-row";
+                geoRow.style.marginTop = "15px";
+                geoRow.style.borderTop = "1px solid rgba(0,229,255,0.3)";
+                geoRow.style.paddingTop = "15px";
+                geoRow.innerHTML = `<label>全局坐标 <br/><span style="color:#64748b;">GEO_COORD</span></label><span class="code-font" style="color: #facc15;">${latStr}, ${lngStr}</span>`;
+                container.appendChild(geoRow);
             }
         }
 
         function closeDrawer() { document.getElementById('academic-drawer').classList.remove('active'); }
-        window.onload = () => { loadDynamicCacheList(); handleResize(); document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && executeHarvest()); };
-        function handleResize() { const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900); document.getElementById('main-scaler').style.transform = `scale(${s * 0.95})`; }
+
+        function init() {
+            init3D();
+            loadDynamicCacheList();
+            handleResize();
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') executeHarvest();
+            });
+        }
+
+        function handleResize() {
+            const vW = window.innerWidth;
+            const vH = window.innerHeight;
+            const scale = Math.min(vW / 1600, vH / 900);
+            const scaler = document.getElementById('main-scaler');
+            if(scaler) scaler.style.transform = `scale(${scale * 0.95})`;
+            
+            // 调整 3D 画布尺寸
+            if(camera && renderer) {
+                const c = document.getElementById('hologram-container');
+                camera.aspect = c.clientWidth / c.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(c.clientWidth, c.clientHeight);
+            }
+        }
+
+        window.onload = init;
         window.onresize = handleResize;
     </script>
 </body>
 </html>
-
-
