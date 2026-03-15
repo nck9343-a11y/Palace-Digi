@@ -411,9 +411,14 @@
             }, 800);
 
             try {
+                // 🌟 终极穿透方案：加入所有可能绕过隧道的头部伪装
                 const res = await fetch(`${API_BASE}/api/trigger_crawl`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true',  // 穿透 ngrok
+                        'Bypass-Tunnel-Reminder': 'true'       // 穿透 localtunnel/cpolar
+                    },
                     body: JSON.stringify({ target: name, force: force })
                 });
                 
@@ -433,9 +438,22 @@
                 clearInterval(currentSimInt);
                 document.getElementById('target-name').innerText = "LINK_FAILED";
                 document.getElementById('scan-state').innerText = "SIGNAL_LOST";
-                pLog.innerText = "> EXECUTION_FAILED / CORS_BLOCKED";
+                pLog.innerText = "> EXECUTION_FAILED / TUNNEL_BLOCKED";
                 pBar.style.width = "0%"; pText.innerText = "ERR";
-                document.getElementById('content-display').innerHTML = `<div style="color: #ff3366; font-size: 13px;"><b>⚠️ API 被拦截。</b><br><a href="${API_BASE}/api/cache_list" target="_blank" style="color: #00E5FF;">👉 点击打通安全通道</a></div>`;
+                
+                // 增加用户自救隧道通道
+                document.getElementById('content-display').innerHTML = `
+                    <div style="color: #ff3366; font-size: 13px; line-height: 1.8; background: rgba(255,51,102,0.05); border: 1px dashed rgba(255,51,102,0.5); padding: 15px; border-radius: 8px;">
+                        <b>⚠️ 核心网关连接被隧道拦截 (假跨域)</b><br><br>
+                        这是因为 cpolar 等免费隧道在第一次访问时会强行弹出一个警告页面，导致浏览器拦截了 API 请求。<br><br>
+                        <b>🔥 极客解决方案 (一键疏通)：</b><br>
+                        请点击下方链接，新开一个页面。如果您看到了 cpolar 的“安全提示页面”，请点击<b>【Visit Site】</b>或<b>【确认访问】</b>以授权通道。<br><br>
+                        <a href="${API_BASE}/api/cache_list" target="_blank" style="display: inline-block; padding: 6px 12px; background: #00E5FF; color: #000; font-weight: bold; border-radius: 4px; text-decoration: none;">
+                            👉 点击打通安全通道
+                        </a><br><br>
+                        授权完成后，直接回到此页面再次尝试收割即可！
+                    </div>
+                `;
             }
         }
 
