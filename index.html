@@ -139,8 +139,8 @@
                 <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
                     <h3 id="target-name" style="font-family: 'Orbitron'; font-size: 36px; font-weight: 900; color: #fff; font-style: italic; letter-spacing: 0.2em; margin: 0; text-transform: uppercase;">Project_Zero</h3>
                     <div style="display: flex; gap: 10px;">
-                        <button id="btn-open-3d" onclick="openTopDrawer()" style="display: none; border: 1px solid #00E5FF; color: #00E5FF; background: rgba(0,229,255,0.1); padding: 4px 12px; font-size: 10px; cursor: pointer; font-family: monospace; transition: 0.3s; font-weight: bold;">
-                            <i class="fas fa-cube mr-1"></i> <span class="lang-zh">启动 3D 全息动态投影</span><span class="lang-en" style="display:none;">LAUNCH DYNAMIC 3D</span>
+                        <button id="btn-open-3d" onclick="openTopDrawer()" style="display: none; border: 1px solid #00E5FF; color: #00E5FF; background: rgba(0,229,255,0.1); padding: 4px 12px; font-size: 10px; cursor: pointer; font-family: monospace; transition: 0.3s; font-weight: bold; box-shadow: 0 0 10px rgba(0,229,255,0.2);">
+                            <i class="fas fa-camera-retro mr-1"></i> <span class="lang-zh">启动 AI 摄影测绘重建</span><span class="lang-en" style="display:none;">LAUNCH PHOTOGRAMMETRY RECONSTRUCTION</span>
                         </button>
                         <button id="btn-open-drawer" onclick="document.getElementById('academic-drawer').classList.add('active')" style="display: none; border: 1px solid #06b6d4; color: #06b6d4; padding: 4px 12px; font-size: 10px; background: transparent; cursor: pointer; font-family: monospace; transition: 0.3s;">
                             <span class="lang-zh">查看 PCG 蓝图 ></span><span class="lang-en" style="display:none;">VIEW PCG BLUEPRINT ></span>
@@ -173,14 +173,18 @@
     <!-- 🌟 顶部抽屉：专用于存放 3D 动态实时全息投影 -->
     <div id="top-3d-drawer" class="top-drawer-panel">
         <div class="drawer-header">
-            <h2 class="cyber-title"><span class="blink">>>></span> DYNAMIC_3D_RENDERER</h2>
+            <h2 class="cyber-title"><span class="blink">>>></span> POINT_CLOUD_RECONSTRUCTION</h2>
             <button class="close-btn" onclick="closeTopDrawer()">[ X ] CLOSE_3D</button>
         </div>
-        <div id="top-hologram-container" style="flex:1; width: 100%; position: relative; overflow: hidden; border-radius: 10px; background: radial-gradient(circle at center, rgba(0,229,255,0.1), transparent 70%);">
-            <div class="grid-overlay" style="opacity: 0.3;"></div>
+        <div id="top-hologram-container" style="flex:1; width: 100%; position: relative; overflow: hidden; border-radius: 10px; background: radial-gradient(circle at center, rgba(0,229,255,0.05), transparent 70%);">
+            <div class="grid-overlay" style="opacity: 0.2;"></div>
+            <!-- 🌟 摄影测绘状态提示 UI -->
+            <div id="hologram-status" style="position: absolute; bottom: 20px; left: 20px; font-family: monospace; font-size: 12px; font-weight: bold; z-index: 10; color: #00e5ff;">
+                >>> AWAITING COMMAND...
+            </div>
         </div>
         <div style="text-align: center; margin-top: 10px; font-size: 10px; color: #00e5ff; font-family: monospace; letter-spacing: 2px;">
-            REAL-TIME PROCEDURAL CONTENT GENERATION (PCG) MOCKUP
+            AI PHOTOGRAMMETRY & NERF POINT CLOUD MOCKUP
         </div>
     </div>
 
@@ -225,10 +229,7 @@
         const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
         
         const currentHost = window.location.hostname;
-        
-        // 🌟 已为你更新了最新鲜的 cpolar 网址！
         const CPOLAR_URL = "https://466a2252.r6.cpolar.top"; 
-        
         const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1" || currentHost === "") 
             ? "http://127.0.0.1:5000" 
             : CPOLAR_URL;
@@ -239,9 +240,18 @@
         setInterval(() => { document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19); }, 1000);
 
         // ==========================================
-        // 🌟 2. 核心大招：动态实时 PCG 3D 构建引擎
+        // 🌟 2. 核心大招：点云 (Point Cloud) 粒子聚合引擎
         // ==========================================
         let scene, camera, renderer, ancientBuildingGroup;
+        
+        // 粒子系统全局变量
+        let particles;
+        let targetPositions;
+        let currentPositions;
+        let originalVelocities;
+        let scanState = 0; // 0: 待命, 1: 蜂群乱舞(爬虫搜集), 2: 粒子聚合(解析), 3: 骨架显现(完成)
+        let wireframeMeshes = [];
+        const pCount = 8000; // 8000 个粒子模拟特征点
 
         function init3D() {
             const container = document.getElementById('top-hologram-container');
@@ -267,16 +277,58 @@
             if (ancientBuildingGroup) {
                 ancientBuildingGroup.rotation.y += 0.005; 
             }
+
+            // 🌟 粒子流体动画核心逻辑
+            if (particles && scanState > 0) {
+                const positions = particles.geometry.attributes.position.array;
+                
+                if (scanState === 1) { 
+                    // 状态 1：蜂群乱舞 (模拟在全网搜刮杂乱无章的原始照片特征点)
+                    for(let i=0; i<pCount; i++) {
+                        positions[i*3] += originalVelocities[i*3];
+                        positions[i*3+1] += originalVelocities[i*3+1];
+                        positions[i*3+2] += originalVelocities[i*3+2];
+                        
+                        // 边界碰撞反弹，限制在一个大球体内
+                        if (positions[i*3] > 30 || positions[i*3] < -30) originalVelocities[i*3] *= -1;
+                        if (positions[i*3+1] > 25 || positions[i*3+1] < -10) originalVelocities[i*3+1] *= -1;
+                        if (positions[i*3+2] > 30 || positions[i*3+2] < -30) originalVelocities[i*3+2] *= -1;
+                    }
+                } 
+                else if (scanState === 2 || scanState === 3) { 
+                    // 状态 2 & 3：粒子开始朝着目标建筑轮廓的坐标进行线性插值 (Lerp)，模拟重建
+                    for(let i=0; i<pCount; i++) {
+                        positions[i*3] += (targetPositions[i*3] - positions[i*3]) * 0.05;
+                        positions[i*3+1] += (targetPositions[i*3+1] - positions[i*3+1]) * 0.05;
+                        positions[i*3+2] += (targetPositions[i*3+2] - positions[i*3+2]) * 0.05;
+                    }
+                    
+                    // 状态 3：点云聚合基本完成，让内部的实体白模网格渐渐浮现
+                    if (scanState === 3) {
+                        wireframeMeshes.forEach(m => {
+                            if (m.material.opacity < (m.isHighlight ? 0.9 : 0.5)) {
+                                m.material.opacity += 0.01;
+                            }
+                        });
+                    }
+                }
+                particles.geometry.attributes.position.needsUpdate = true;
+            }
+
             renderer.render(scene, camera);
         }
 
+        // 🌟 构建几何体并分配粒子的目标坐标
         function buildDynamicModel(dnaList) {
+            // 清理旧资源
             while(ancientBuildingGroup.children.length > 0){ 
                 ancientBuildingGroup.remove(ancientBuildingGroup.children[0]); 
             }
+            wireframeMeshes = [];
 
-            const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.5 });
-            const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.9 });
+            // 注意初始透明度设为 0，由动画后期控制淡入
+            const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0 });
+            const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0 });
 
             let w = 5, d = 3, h = 1; 
             let isTulouOrRound = false; 
@@ -305,28 +357,95 @@
             const drawD = d * scaleFactor;
             const drawH = h * scaleFactor;
 
+            // --- 1. 创建实体白模轮廓 (先隐藏) ---
             if (isTulouOrRound) {
                 const geo = new THREE.CylinderGeometry(drawW/2, drawW/2, drawH * 3, 24);
                 const mesh = new THREE.Mesh(geo, highlightMaterial);
+                mesh.isHighlight = true;
+                wireframeMeshes.push(mesh);
                 ancientBuildingGroup.add(mesh);
             } else {
                 const baseGeo = new THREE.BoxGeometry(drawW + 1.5, drawH, drawD + 1.5);
                 const baseMesh = new THREE.Mesh(baseGeo, highlightMaterial);
                 baseMesh.position.y = -drawH/2;
+                baseMesh.isHighlight = true;
+                wireframeMeshes.push(baseMesh);
                 ancientBuildingGroup.add(baseMesh);
 
                 const bodyGeo = new THREE.BoxGeometry(drawW, 3, drawD);
                 const bodyMesh = new THREE.Mesh(bodyGeo, material);
                 bodyMesh.position.y = 1.5;
+                bodyMesh.isHighlight = false;
+                wireframeMeshes.push(bodyMesh);
                 ancientBuildingGroup.add(bodyMesh);
 
                 const roofGeo = new THREE.CylinderGeometry(drawW * 0.3, drawW/2 + 1, 2, 4);
                 const roofMesh = new THREE.Mesh(roofGeo, highlightMaterial);
                 roofMesh.position.y = 3 + 1;
                 roofMesh.rotation.y = Math.PI / 4; 
+                roofMesh.isHighlight = true;
+                wireframeMeshes.push(roofMesh);
                 ancientBuildingGroup.add(roofMesh);
             }
+
             ancientBuildingGroup.position.y = -1; 
+
+            // --- 2. 创建 3D 点云粒子系统 ---
+            const geometry = new THREE.BufferGeometry();
+            currentPositions = new Float32Array(pCount * 3);
+            targetPositions = new Float32Array(pCount * 3);
+            originalVelocities = new Float32Array(pCount * 3);
+
+            for (let i = 0; i < pCount; i++) {
+                // 粒子初始状态：在一个大空间内散乱分布
+                currentPositions[i*3] = (Math.random() - 0.5) * 60;
+                currentPositions[i*3+1] = (Math.random() - 0.5) * 60 + 10;
+                currentPositions[i*3+2] = (Math.random() - 0.5) * 60;
+
+                // 给每个粒子赋予一个随机的飞行速度
+                originalVelocities[i*3] = (Math.random() - 0.5) * 0.8;
+                originalVelocities[i*3+1] = (Math.random() - 0.5) * 0.8;
+                originalVelocities[i*3+2] = (Math.random() - 0.5) * 0.8;
+
+                // 粒子目标状态：均匀依附在生成的 3D 建筑表面上
+                let tx, ty, tz;
+                if (isTulouOrRound) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = drawW/2 * (0.85 + Math.random() * 0.15); 
+                    const h_rnd = (Math.random() - 0.5) * (drawH * 3);
+                    tx = r * Math.cos(angle); ty = h_rnd; tz = r * Math.sin(angle);
+                } else {
+                    const part = Math.random();
+                    if (part < 0.3) { // 分布在台基
+                        tx = (Math.random() - 0.5) * (drawW + 1.5);
+                        ty = -drawH/2 + (Math.random() - 0.5) * drawH;
+                        tz = (Math.random() - 0.5) * (drawD + 1.5);
+                    } else if (part < 0.7) { // 分布在墙体
+                        if (Math.random() > 0.5) {
+                            tx = (Math.random() > 0.5 ? 1 : -1) * drawW/2;
+                            ty = 1.5 + (Math.random() - 0.5) * 3;
+                            tz = (Math.random() - 0.5) * drawD;
+                        } else {
+                            tx = (Math.random() - 0.5) * drawW;
+                            ty = 1.5 + (Math.random() - 0.5) * 3;
+                            tz = (Math.random() > 0.5 ? 1 : -1) * drawD/2;
+                        }
+                    } else { // 分布在屋顶
+                        const angle = Math.random() * Math.PI * 2;
+                        const r = Math.random() * (drawW/2 + 1);
+                        const y_ratio = 1 - (r / (drawW/2 + 1)); 
+                        tx = r * Math.cos(angle); ty = 4 + y_ratio * 2; tz = r * Math.sin(angle);
+                    }
+                }
+                targetPositions[i*3] = tx;
+                targetPositions[i*3+1] = ty;
+                targetPositions[i*3+2] = tz;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
+            const pMat = new THREE.PointsMaterial({ color: 0x00E5FF, size: 0.06, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+            particles = new THREE.Points(geometry, pMat);
+            ancientBuildingGroup.add(particles);
         }
 
         // ==========================================
@@ -528,11 +647,32 @@
         }
 
         function closeDrawer() { document.getElementById('academic-drawer').classList.remove('active'); }
+        
+        // 🌟 核心：触发 3D 点云模拟动画全流程
         function openTopDrawer() {
             const drawer = document.getElementById('top-3d-drawer');
             drawer.classList.add('active');
+            
+            // 初始化动画序列
+            scanState = 1; // 第一阶段：爬虫搜刮原始特征点
+            const statusEl = document.getElementById('hologram-status');
+            statusEl.innerHTML = `<span style="color:#facc15">>>> [PHOTOGRAMMETRY AGENT] INITIATED... SCRAPING 2,408 IMAGES FROM WEB...</span>`;
+            
+            // 3秒后进入聚合阶段
+            setTimeout(() => {
+                scanState = 2; // 第二阶段：提取特征并开始聚合
+                statusEl.innerHTML = `<span style="color:#00e5ff">>>> [POINT CLOUD ENGINE] EXTRACTING FEATURES & ASSEMBLING POINT CLOUD...</span>`;
+            }, 3000);
+
+            // 再过3秒进入骨架渲染阶段
+            setTimeout(() => {
+                scanState = 3; // 第三阶段：网格浮现
+                statusEl.innerHTML = `<span style="color:#0f0">>>> [TOPOLOGY READY] PROCEDURAL MODEL SUCCESSFULLY RECONSTRUCTED.</span>`;
+            }, 6000);
+
             setTimeout(() => { if(camera && renderer) { const c = document.getElementById('top-hologram-container'); camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight); } }, 600);
         }
+        
         function closeTopDrawer() { document.getElementById('top-3d-drawer').classList.remove('active'); }
         
         function init() { 
