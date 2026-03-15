@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -109,8 +108,8 @@
         <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; flex: 1; overflow: hidden;">
             <div class="glass-panel" style="grid-column: span 3; display: flex; flex-direction: column; overflow: hidden; padding: 20px;">
                 <div style="margin-bottom: 16px; border-bottom: 1px solid rgba(0,229,255,0.2); padding-bottom: 16px;">
-                    <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; font-family: monospace; text-transform: uppercase;"><i class="fas fa-satellite-dish" style="margin-right: 4px;"></i> Remote Miner</h2>
-                    <input type="text" id="searchInput" placeholder="输入古建名 (支持桥梁/城墙/土楼)..." style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid #164e63; color: #22d3ee; padding: 8px; margin-bottom: 8px; font-family: monospace; outline: none; box-sizing: border-box; font-size: 12px;">
+                    <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; font-family: monospace; text-transform: uppercase;"><i class="fas fa-satellite-dish" style="margin-right: 4px;"></i> Dual-Engine Radar</h2>
+                    <input type="text" id="searchInput" placeholder="输入古建名实时检索或远程收割..." style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid #164e63; color: #22d3ee; padding: 8px; margin-bottom: 8px; font-family: monospace; outline: none; box-sizing: border-box; font-size: 12px;">
                     <button id="searchBtn" onclick="executeHarvest()" style="width: 100%; background: rgba(22,78,99,0.4); border: 1px solid #06b6d4; color: #06b6d4; padding: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; letter-spacing: 0.1em; transition: 0.3s; font-size: 10px; font-family: monospace;">
                         <span class="lang-zh">[ 唤醒 NPU 远程收割 ]</span><span class="lang-en" style="display:none;">[ INITIATE REMOTE MINING ]</span>
                     </button>
@@ -140,7 +139,6 @@
                 <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
                     <h3 id="target-name" style="font-family: 'Orbitron'; font-size: 36px; font-weight: 900; color: #fff; font-style: italic; letter-spacing: 0.2em; margin: 0; text-transform: uppercase;">Project_Zero</h3>
                     <div style="display: flex; gap: 10px;">
-                        <!-- 🌟 唤醒顶部 3D 抽屉按钮 -->
                         <button id="btn-open-3d" onclick="openTopDrawer()" style="display: none; border: 1px solid #00E5FF; color: #00E5FF; background: rgba(0,229,255,0.1); padding: 4px 12px; font-size: 10px; cursor: pointer; font-family: monospace; transition: 0.3s; font-weight: bold;">
                             <i class="fas fa-cube mr-1"></i> <span class="lang-zh">启动 3D 全息动态投影</span><span class="lang-en" style="display:none;">LAUNCH DYNAMIC 3D</span>
                         </button>
@@ -227,15 +225,16 @@
         const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
         
         const currentHost = window.location.hostname;
+        
+        // 🌟 已为你更新了最新鲜的 cpolar 网址！
         const CPOLAR_URL = "https://466a2252.r6.cpolar.top"; 
         
-        // 🌟 王浦硕必看：演示时，请将这整个网页保存到本地桌面双击打开！
-        // 这样本地打开时，会自动走 127.0.0.1，彻底解决 CORS！
         const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1" || currentHost === "") 
             ? "http://127.0.0.1:5000" 
             : CPOLAR_URL;
         
         let currentTimer = null; let currentSimInt = null; let currentData = null;
+        let globalCloudNodes = [];
 
         setInterval(() => { document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19); }, 1000);
 
@@ -248,7 +247,7 @@
             const container = document.getElementById('top-hologram-container');
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 8, 20); // 稍微拉远，方便看大体量建筑
+            camera.position.set(0, 8, 20); 
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -258,7 +257,6 @@
             ancientBuildingGroup = new THREE.Group();
             scene.add(ancientBuildingGroup);
 
-            // 初始化生成一个通用抽象模型
             buildDynamicModel([]); 
 
             animate3D();
@@ -272,9 +270,7 @@
             renderer.render(scene, camera);
         }
 
-        // 🌟 读取大模型数据，实时生成比例正确的 3D 几何体！
         function buildDynamicModel(dnaList) {
-            // 清空旧的 3D 模型
             while(ancientBuildingGroup.children.length > 0){ 
                 ancientBuildingGroup.remove(ancientBuildingGroup.children[0]); 
             }
@@ -282,9 +278,8 @@
             const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.5 });
             const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.9 });
 
-            // 解析 DNA 参数
-            let w = 5, d = 3, h = 1; // 默认基准比例
-            let isTulouOrRound = false; // 是否是圆形建筑（如土楼）
+            let w = 5, d = 3, h = 1; 
+            let isTulouOrRound = false; 
 
             if (dnaList && dnaList.length > 0) {
                 dnaList.forEach(p => {
@@ -293,7 +288,6 @@
                     const num = parseFloat(valStr.replace(/[^\d.]/g, ''));
                     
                     if (!isNaN(num)) {
-                        // 智能映射宽度、进深、高度
                         if (name.includes("WIDTH") || name.includes("SPAN") || name.includes("DIAMETER") || name.includes("面阔")) w = num;
                         if (name.includes("DEPTH") || name.includes("THICKNESS") || name.includes("进深")) d = num;
                         if (name.includes("BASE_H") || name.includes("HEIGHT") || name.includes("高")) h = num;
@@ -304,7 +298,6 @@
                 });
             }
 
-            // 限制最大比例，防止超出画布
             const maxDim = Math.max(w, d, h, 1);
             const scaleFactor = 10 / maxDim; 
             
@@ -313,35 +306,32 @@
             const drawH = h * scaleFactor;
 
             if (isTulouOrRound) {
-                // 🌟 生成土楼/堡垒 (圆柱体)
                 const geo = new THREE.CylinderGeometry(drawW/2, drawW/2, drawH * 3, 24);
                 const mesh = new THREE.Mesh(geo, highlightMaterial);
                 ancientBuildingGroup.add(mesh);
             } else {
-                // 🌟 生成传统殿宇骨架
-                // 1. 台基
                 const baseGeo = new THREE.BoxGeometry(drawW + 1.5, drawH, drawD + 1.5);
                 const baseMesh = new THREE.Mesh(baseGeo, highlightMaterial);
                 baseMesh.position.y = -drawH/2;
                 ancientBuildingGroup.add(baseMesh);
 
-                // 2. 柱网屋身
                 const bodyGeo = new THREE.BoxGeometry(drawW, 3, drawD);
                 const bodyMesh = new THREE.Mesh(bodyGeo, material);
                 bodyMesh.position.y = 1.5;
                 ancientBuildingGroup.add(bodyMesh);
 
-                // 3. 屋顶骨架 (四坡顶)
                 const roofGeo = new THREE.CylinderGeometry(drawW * 0.3, drawW/2 + 1, 2, 4);
                 const roofMesh = new THREE.Mesh(roofGeo, highlightMaterial);
                 roofMesh.position.y = 3 + 1;
-                roofMesh.rotation.y = Math.PI / 4; // 对齐正方形
+                roofMesh.rotation.y = Math.PI / 4; 
                 ancientBuildingGroup.add(roofMesh);
             }
-            
-            ancientBuildingGroup.position.y = -1; // 整体下移对齐镜头
+            ancientBuildingGroup.position.y = -1; 
         }
 
+        // ==========================================
+        // 🌟 3. 数据拉取与【本地光速检索】渲染逻辑
+        // ==========================================
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
             list.innerHTML = `<div style="font-size: 10px; color: #06b6d4; font-family: monospace; padding: 16px 0; text-align: center;" class="blink">SCANNING_CLOUD_NODES...</div>`; 
@@ -353,30 +343,42 @@
                 });
                 if (!response.ok) throw new Error("API Error");
                 const data = await response.json();
-                const results = data.results || [];
+                
+                globalCloudNodes = data.results || [];
                 
                 document.getElementById('sync-status').innerText = "DB_CONNECTED";
                 document.getElementById('sync-status').style.color = "#0f0";
-                list.innerHTML = ""; 
-                if (results.length > 0) {
-                    results.forEach((item) => {
-                        const b = item.payload; 
-                        const div = document.createElement('div');
-                        div.style.cssText = "padding: 12px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 8px; cursor: pointer; transition: 0.3s;";
-                        div.onmouseover = () => { div.style.borderColor = "#22d3ee"; div.style.background = "rgba(8, 145, 178, 0.3)"; };
-                        div.onmouseout = () => { div.style.borderColor = "rgba(6, 182, 212, 0.2)"; div.style.background = "rgba(8, 145, 178, 0.1)"; };
-                        const nodeID = item.objectId.substring(0, 6).toUpperCase();
-                        const nameDisp = b.name[currentLang] || b.name.zh || "Unknown";
-                        div.innerHTML = `<div style="font-size: 8px; color: #0369a1; font-family: monospace;">ASSET_ID: ${nodeID}</div><div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${nameDisp}</div>`;
-                        div.onclick = () => renderUI(b, false);
-                        list.appendChild(div);
-                    });
-                }
+                
+                renderNodeList(globalCloudNodes);
+
             } catch (error) {
                 document.getElementById('sync-status').innerText = "OFFLINE";
                 document.getElementById('sync-status').style.color = "red";
                 list.innerHTML = `<div style="color: #ff3366; font-size: 10px; padding: 8px;">❌ 云端访问受阻</div>`;
             }
+        }
+
+        function renderNodeList(nodes) {
+            const list = document.getElementById('file-list');
+            list.innerHTML = ""; 
+            
+            if (nodes.length === 0) {
+                list.innerHTML = `<div style="color: #ff3366; font-size: 10px; text-align: center; font-style: italic; padding: 12px; border: 1px dashed #ff3366; border-radius: 4px;">NO_MATCHING_ASSET<br><br><span style="color:#64748b;">(未找到匹配档案，可点击上方按钮唤醒 NPU 远程收割该建筑)</span></div>`;
+                return;
+            }
+
+            nodes.forEach((item) => {
+                const b = item.payload; 
+                const div = document.createElement('div');
+                div.style.cssText = "padding: 12px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 8px; cursor: pointer; transition: 0.3s;";
+                div.onmouseover = () => { div.style.borderColor = "#22d3ee"; div.style.background = "rgba(8, 145, 178, 0.3)"; };
+                div.onmouseout = () => { div.style.borderColor = "rgba(6, 182, 212, 0.2)"; div.style.background = "rgba(8, 145, 178, 0.1)"; };
+                const nodeID = item.objectId.substring(0, 6).toUpperCase();
+                const nameDisp = b.name[currentLang] || b.name.zh || "Unknown";
+                div.innerHTML = `<div style="font-size: 8px; color: #0369a1; font-family: monospace;">ASSET_ID: ${nodeID}</div><div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${nameDisp}</div>`;
+                div.onclick = () => renderUI(b, false);
+                list.appendChild(div);
+            });
         }
 
         function executeHarvest() {
@@ -395,6 +397,7 @@
                 btn.style.pointerEvents = "auto";
                 btn.style.opacity = "1";
                 searchInput.value = '';
+                renderNodeList(globalCloudNodes);
             });
         }
 
@@ -440,7 +443,19 @@
                 document.getElementById('scan-state').innerText = "SIGNAL_LOST";
                 pLog.innerText = "> EXECUTION_FAILED / TUNNEL_BLOCKED";
                 pBar.style.width = "0%"; pText.innerText = "ERR";
-                document.getElementById('content-display').innerHTML = `<div style="color: #ff3366; font-size: 13px; line-height: 1.8; background: rgba(255,51,102,0.05); border: 1px dashed rgba(255,51,102,0.5); padding: 15px; border-radius: 8px;"><b>⚠️ 核心网关连接被隧道拦截 (假跨域)</b><br><br>这是因为 cpolar 在首次公网访问时会弹安全页拦截。<br><br><b>🔥 终极逃课建议 (华为演示必看)：</b><br>请不要在 GitHub 网页上点击收割。请将这个 <code>index.html</code> 下载到电脑桌面，双击在本地打开！它会自动连接本地 Kali 的 127.0.0.1:5000 端口，体验光速且绝对不跨域！</div>`;
+                document.getElementById('content-display').innerHTML = `
+                    <div style="color: #ff3366; font-size: 13px; line-height: 1.8; background: rgba(255,51,102,0.05); border: 1px dashed rgba(255,51,102,0.5); padding: 15px; border-radius: 8px;">
+                        <b>⚠️ 核心网关连接被隧道拦截 (假跨域)</b><br><br>
+                        这是因为 cpolar 在首次公网访问时会弹安全页拦截。<br><br>
+                        <b>🔥 终极逃课建议 (华为演示必看)：</b><br>
+                        如果您在公网（如 GitHub Pages）上演示，必须先<b>点击下方链接手动打通 cpolar 隧道</b>！<br>
+                        <a href="${API_BASE}/api/cache_list" target="_blank" style="display: inline-block; padding: 6px 12px; background: #00E5FF; color: #000; font-weight: bold; border-radius: 4px; text-decoration: none; margin-top: 10px;">
+                            👉 第一步：点击我，在弹出的新网页里点击【Visit Site】
+                        </a><br>
+                        （打通后关闭新网页，再回来点一次收割即可！）<br><br>
+                        <i>*或者直接将本 HTML 保存至电脑桌面双击运行（本地内网直接免拦截）。</i>
+                    </div>
+                `;
             }
         }
 
@@ -456,7 +471,6 @@
             document.getElementById('btn-open-drawer').style.display = 'block';
             document.getElementById('btn-open-3d').style.display = 'block';
 
-            // 🌟 通知 3D 引擎实时重建动态模型！
             const dnaList = item.pcg_dna || [];
             buildDynamicModel(dnaList);
 
@@ -520,7 +534,31 @@
             setTimeout(() => { if(camera && renderer) { const c = document.getElementById('top-hologram-container'); camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight); } }, 600);
         }
         function closeTopDrawer() { document.getElementById('top-3d-drawer').classList.remove('active'); }
-        function init() { init3D(); loadDynamicCacheList(); handleResize(); document.getElementById('searchInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeHarvest(); }); }
+        
+        function init() { 
+            init3D(); 
+            loadDynamicCacheList(); 
+            handleResize(); 
+            
+            const searchInput = document.getElementById('searchInput');
+            
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                if (!query) {
+                    renderNodeList(globalCloudNodes);
+                    return;
+                }
+                const filtered = globalCloudNodes.filter(item => {
+                    const zhName = item.payload?.name?.zh || "";
+                    const enName = item.payload?.name?.en || "";
+                    return zhName.toLowerCase().includes(query) || enName.toLowerCase().includes(query);
+                });
+                renderNodeList(filtered);
+            });
+
+            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') executeHarvest(); }); 
+        }
+        
         function handleResize() {
             const scale = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
             const scaler = document.getElementById('main-scaler'); if(scaler) scaler.style.transform = `scale(${scale * 0.95})`;
