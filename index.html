@@ -23,7 +23,7 @@
         #main-scaler { width: 1600px; height: 900px; transform-origin: center; position: absolute; left: 50%; top: 50%; margin-left: -800px; margin-top: -450px; display: flex; flex-direction: column; padding: 30px; transition: transform 0.3s ease; }
         .glass-panel { background: rgba(10, 15, 30, 0.9) !important; backdrop-filter: blur(15px); border: 1px solid rgba(0, 229, 255, 0.2) !important; clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); box-shadow: inset 0 0 20px rgba(0,229,255,0.05); }
         
-        /* 🌟 卫星图 3D 倾斜全息特效 - 史诗级优化版 */
+        /* 🌟 卫星图 3D 倾斜全息特效 */
         .perspective-container { perspective: 1000px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; z-index: 5;}
         
         .satellite-wrapper {
@@ -33,62 +33,31 @@
             transform: rotateX(55deg) rotateZ(0deg);
             transform-style: preserve-3d;
             transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-            display: none; /* 由 JS 控制显示 */
+            display: none; 
         }
         
-        .satellite-wrapper.active {
-            display: block;
-        }
-
-        .satellite-wrapper:hover {
-            transform: rotateX(40deg) rotateZ(0deg) scale(1.05);
-            cursor: crosshair;
-        }
+        .satellite-wrapper.active { display: block; }
+        .satellite-wrapper:hover { transform: rotateX(40deg) rotateZ(0deg) scale(1.05); cursor: crosshair; }
 
         .satellite-3d { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover;
-            /* 🌟 核心优化 1：边缘径向渐变羽化，完美融入纯黑背景，不留死板的方框 */
+            width: 100%; height: 100%; object-fit: cover;
             -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 75%);
             mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 75%);
-            
-            /* 🌟 核心优化 2：先强行黑白化，再注入高饱和青色，彻底杜绝偏色发红 */
             filter: grayscale(1) sepia(1) hue-rotate(130deg) saturate(4) brightness(0.9) contrast(1.2);
-            opacity: 0.85;
-            position: relative;
-            z-index: 2;
+            opacity: 0.85; position: relative; z-index: 2;
         }
 
-        /* 🌟 核心优化 3：悬浮发光底座与雷达扫描线 */
-        .satellite-base {
-            position: absolute;
-            inset: 15%;
-            background: transparent;
-            box-shadow: 0 0 60px 20px rgba(0, 229, 255, 0.25);
-            border-radius: 50%;
-            transform: translateZ(-30px);
-            pointer-events: none;
-            z-index: 1;
-        }
+        .satellite-base { position: absolute; inset: 15%; background: transparent; box-shadow: 0 0 60px 20px rgba(0, 229, 255, 0.25); border-radius: 50%; transform: translateZ(-30px); pointer-events: none; z-index: 1; }
 
         .satellite-scanline {
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: rgba(0, 229, 255, 0.8);
-            box-shadow: 0 0 15px rgba(0, 229, 255, 1);
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: rgba(0, 229, 255, 0.8); box-shadow: 0 0 15px rgba(0, 229, 255, 1);
             animation: scan-map 4s linear infinite;
             -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 75%);
-            z-index: 3;
-            pointer-events: none;
+            z-index: 3; pointer-events: none;
         }
 
-        @keyframes scan-map {
-            0% { top: 5%; opacity: 0;}
-            10% { opacity: 1;}
-            90% { opacity: 1;}
-            100% { top: 95%; opacity: 0;}
-        }
+        @keyframes scan-map { 0% { top: 5%; opacity: 0;} 10% { opacity: 1;} 90% { opacity: 1;} 100% { top: 95%; opacity: 0;} }
 
         .grid-overlay { position: absolute; inset: 0; background: linear-gradient(rgba(0, 229, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px); z-index: 1; opacity: 0.5; }
 
@@ -96,11 +65,10 @@
         .cursor { display: inline-block; width: 6px; height: 14px; background: var(--cyber-blue); animation: blink 0.8s infinite; vertical-align: middle; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         
-        /* 右侧抽屉 */
+        /* 抽屉面板 */
         .drawer-panel { position: fixed; top: 0; right: -450px; width: 400px; height: 100vh; background: rgba(10, 20, 30, 0.98); backdrop-filter: blur(20px); border-left: 2px solid #00f2ff; box-shadow: -10px 0 40px rgba(0, 242, 255, 0.2); transition: right 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 9999; font-family: 'Courier New', monospace; color: #e0f0ff; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
         .drawer-panel.active { right: 0; }
 
-        /* 🌟 顶部 3D 抽屉 */
         .top-drawer-panel { position: fixed; top: -65vh; left: 10%; right: 10%; height: 60vh; background: rgba(2, 6, 23, 0.98); backdrop-filter: blur(30px); border: 2px solid #00f2ff; border-top: none; border-radius: 0 0 20px 20px; box-shadow: 0 20px 50px rgba(0, 242, 255, 0.3); transition: top 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 10000; padding: 20px; display: flex; flex-direction: column; }
         .top-drawer-panel.active { top: 0; }
 
@@ -117,20 +85,17 @@
 
         .progress-bar { width: 0%; transition: width 0.3s ease; }
         .blink { animation: blink-text 1.5s infinite; }
-        @keyframes blink-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
     <div id="main-scaler">
-        <!-- 顶部信息栏 -->
         <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(0,229,255,0.3); padding-bottom: 16px; margin-bottom: 24px;">
             <div>
                 <h1 style="font-family: 'Orbitron'; color: #00E5FF; font-size: 48px; margin: 0; font-weight: 900; font-style: italic;">PALACE-DIGI <span style="color: #1e40af; font-size: 20px; font-style: normal;">ADAPTIVE_PCG_ENGINE</span></h1>
                 <p style="color: #0369a1; font-family: monospace; font-size: 10px; letter-spacing: 0.3em; margin-top: 4px; text-transform: uppercase;">Operator: 王浦硕 | Mode: COMMAND_CENTER</p>
             </div>
             <div style="text-align: right; color: #164e63; font-family: monospace; font-size: 10px;">
-                <!-- 🌟 中英文切换按钮 -->
                 <div style="margin-bottom: 8px; display: flex; gap: 8px; justify-content: flex-end;">
                     <button onclick="toggleLang('zh')" id="btn-zh" style="border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 12px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.3s;">ZH</button>
                     <button onclick="toggleLang('en')" id="btn-en" style="border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 12px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.3s;">EN</button>
@@ -141,9 +106,7 @@
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; flex: 1; overflow: hidden;">
-            <!-- 左侧：云端缓存列表 -->
             <div class="glass-panel" style="grid-column: span 3; display: flex; flex-direction: column; overflow: hidden; padding: 20px;">
-                <!-- 遥控收割模块 -->
                 <div style="margin-bottom: 16px; border-bottom: 1px solid rgba(0,229,255,0.2); padding-bottom: 16px;">
                     <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; font-family: monospace; text-transform: uppercase;"><i class="fas fa-satellite-dish" style="margin-right: 4px;"></i> Remote Miner</h2>
                     <input type="text" id="searchInput" placeholder="输入古建名 (支持桥梁/城墙/土楼)..." style="width: 100%; background: rgba(15,23,42,0.8); border: 1px solid #164e63; color: #22d3ee; padding: 8px; margin-bottom: 8px; font-family: monospace; outline: none; box-sizing: border-box; font-size: 12px;">
@@ -151,20 +114,13 @@
                         <span class="lang-zh">[ 唤醒 NPU 远程收割 ]</span><span class="lang-en" style="display:none;">[ INITIATE REMOTE MINING ]</span>
                     </button>
                 </div>
-
                 <h2 style="color: #075985; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.2em; font-family: monospace; text-transform: uppercase;">Cloud_Nodes</h2>
-                <div id="file-list" class="scrollbar-hide" style="flex: 1; overflow-y: auto;">
-                    <!-- 动态加载云端数据 -->
-                </div>
+                <div id="file-list" class="scrollbar-hide" style="flex: 1; overflow-y: auto;"></div>
             </div>
 
-            <!-- 中间：视觉显示与主内容 -->
             <div class="glass-panel" style="grid-column: span 6; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; padding: 24px; background-color: rgba(2,6,23,0.9);">
                 <div id="visual-zone" style="width: 100%; height: 400px; margin-bottom: 16px; border: 1px solid rgba(0,229,255,0.1); border-radius: 8px; position: relative; overflow: hidden; background: #000;">
-                    
                     <div class="grid-overlay"></div>
-                    
-                    <!-- 🌟 史诗级优化：带羽化边缘和扫描线的真·全息投影卫星图 -->
                     <div class="perspective-container">
                         <div id="satellite-wrapper" class="satellite-wrapper">
                             <div class="satellite-base"></div>
@@ -172,11 +128,9 @@
                             <img id="satellite-map" src="" class="satellite-3d" alt="SATELLITE_FEED">
                         </div>
                     </div>
-
                     <div id="no-img-msg" style="position: absolute; inset:0; display:flex; align-items:center; justify-content:center; color: #164e63; font-family: monospace; font-size: 12px; font-style: italic; z-index: 10;">
                         <span class="lang-zh">等待卫星轨道链路介入...</span><span class="lang-en" style="display:none;">AWAITING_SATELLITE_UPLINK...</span>
                     </div>
-
                     <div style="position: absolute; bottom: 16px; left: 24px; font-family: monospace; font-size: 9px; color: #06b6d4; letter-spacing: 0.1em; text-transform: uppercase; z-index: 10;">
                         Asset_Status: <span id="scan-state" class="blink" style="color: #fff; font-weight: bold;">STANDBY</span>
                     </div>
@@ -184,30 +138,24 @@
                 
                 <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
                     <h3 id="target-name" style="font-family: 'Orbitron'; font-size: 36px; font-weight: 900; color: #fff; font-style: italic; letter-spacing: 0.2em; margin: 0; text-transform: uppercase;">Project_Zero</h3>
-                    
                     <div style="display: flex; gap: 10px;">
                         <!-- 🌟 唤醒顶部 3D 抽屉按钮 -->
                         <button id="btn-open-3d" onclick="openTopDrawer()" style="display: none; border: 1px solid #00E5FF; color: #00E5FF; background: rgba(0,229,255,0.1); padding: 4px 12px; font-size: 10px; cursor: pointer; font-family: monospace; transition: 0.3s; font-weight: bold;">
-                            <i class="fas fa-cube mr-1"></i> <span class="lang-zh">启动 3D 全息投影</span><span class="lang-en" style="display:none;">LAUNCH 3D HOLOGRAM</span>
+                            <i class="fas fa-cube mr-1"></i> <span class="lang-zh">启动 3D 全息动态投影</span><span class="lang-en" style="display:none;">LAUNCH DYNAMIC 3D</span>
                         </button>
-                        
-                        <!-- 唤醒右侧参数抽屉按钮 -->
                         <button id="btn-open-drawer" onclick="document.getElementById('academic-drawer').classList.add('active')" style="display: none; border: 1px solid #06b6d4; color: #06b6d4; padding: 4px 12px; font-size: 10px; background: transparent; cursor: pointer; font-family: monospace; transition: 0.3s;">
                             <span class="lang-zh">查看 PCG 蓝图 ></span><span class="lang-en" style="display:none;">VIEW PCG BLUEPRINT ></span>
                         </button>
                     </div>
                 </div>
-                
                 <div id="content-display" class="scrollbar-hide" style="flex: 1; overflow-y: auto; width: 100%; font-size: 14px; color: rgba(207,250,254,0.7); font-weight: 300; line-height: 1.8; border-top: 1px solid rgba(0,229,255,0.2); padding-top: 16px; text-align: justify;"></div>
             </div>
 
-            <!-- 右侧：数据流 -->
             <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 16px;">
                 <div class="glass-panel" style="flex: 1; padding: 16px; display: flex; flex-direction: column; overflow: hidden;">
                     <h2 style="color: #06b6d4; font-size: 10px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.1em; margin-top: 0; font-family: monospace; text-transform: uppercase;">Raw_JSON_Stream</h2>
                     <pre id="json-stream" class="scrollbar-hide" style="font-size: 9px; color: rgba(34,211,238,0.5); font-style: italic; overflow: auto; flex: 1; line-height: 1.2; font-family: monospace; white-space: pre-wrap; word-break: break-all; margin: 0;">/* Awaiting Data... */</pre>
                 </div>
-                
                 <div class="glass-panel" style="height: 128px; padding: 16px; display: flex; flex-direction: column; justify-content: center; position: relative;">
                     <div style="position: absolute; font-family: monospace; top: 8px; right: 8px; color: #164e63; font-size: 8px;">AI_MINER: CORE_NODE</div>
                     <div style="font-size: 10px; color: #22d3ee; margin-bottom: 8px; font-family: monospace; display: flex; justify-content: space-between; letter-spacing: 0.1em;">
@@ -223,98 +171,75 @@
         </div>
     </div>
 
-    <!-- 🌟 顶部抽屉：专用于存放 3D 全息投影 -->
+    <!-- 🌟 顶部抽屉：专用于存放 3D 动态实时全息投影 -->
     <div id="top-3d-drawer" class="top-drawer-panel">
         <div class="drawer-header">
-            <h2 class="cyber-title"><span class="blink">>>></span> 3D_HOLOGRAM_RENDERER</h2>
+            <h2 class="cyber-title"><span class="blink">>>></span> DYNAMIC_3D_RENDERER</h2>
             <button class="close-btn" onclick="closeTopDrawer()">[ X ] CLOSE_3D</button>
         </div>
-        <!-- 3D 渲染画布将挂载于此 -->
         <div id="top-hologram-container" style="flex:1; width: 100%; position: relative; overflow: hidden; border-radius: 10px; background: radial-gradient(circle at center, rgba(0,229,255,0.1), transparent 70%);">
             <div class="grid-overlay" style="opacity: 0.3;"></div>
         </div>
         <div style="text-align: center; margin-top: 10px; font-size: 10px; color: #00e5ff; font-family: monospace; letter-spacing: 2px;">
-            PROCEDURAL_CONTENT_GENERATION (PCG) MOCKUP
+            REAL-TIME PROCEDURAL CONTENT GENERATION (PCG) MOCKUP
         </div>
     </div>
 
-    <!-- 右侧抽屉：展示提取出的 PCG 参数 -->
     <div id="academic-drawer" class="drawer-panel">
         <div class="drawer-header">
             <h2 class="cyber-title"><span class="blink">>>></span> UE5_BLUEPRINT</h2>
             <button class="close-btn" onclick="closeDrawer()">[ X ] CLOSE</button>
         </div>
-
         <div class="drawer-content" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
             <div style="padding: 10px; background: rgba(0,229,255,0.1); border: 1px solid #00e5ff; margin-bottom: 20px; font-size: 11px; line-height: 1.5;">
                 <i class="fas fa-microchip"></i> <b class="lang-zh">自适应 3D 生成矩阵：</b><b class="lang-en" style="display:none;">Adaptive Generation Matrix:</b><br>
                 <span class="lang-zh">以下参数由核心大模型动态提炼，直接输出适配该建筑类型的最优 3D 参数矩阵。</span>
                 <span class="lang-en" style="display:none;">Parameters below are dynamically extracted by Core LLM for specific architectural topologies.</span>
             </div>
-
             <div class="data-terminal">
                 <div class="data-row" style="border-bottom: 1px solid #00e5ff;">
                     <label style="font-size: 12px;">ASSET_NAME:</label>
                     <span id="drawer-name" class="code-font uppercase" style="font-weight: bold; color: #fff;">LOADING...</span>
                 </div>
-                
                 <div style="margin-top: 20px; margin-bottom: 10px; display: flex; justify-content: space-between;">
                     <label style="font-size: 12px; color: #00f2ff; font-weight: bold;">[ ADAPTIVE_ARCH_DNA ]</label>
                     <span class="blueprint-tag">DYNAMIC_DATA</span>
                 </div>
-                
-                <div id="pcg-dna-container">
-                    <!-- 动态生成 PCG 参数 -->
-                </div>
+                <div id="pcg-dna-container"></div>
             </div>
-            
             <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(0,229,255,0.2); font-size: 10px; color: #64748b; font-family: monospace;">READY_FOR_UNREAL_ENGINE_EXPORT...</div>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // 🌟 0. 语言控制中枢
-        // ==========================================
-        let currentLang = 'zh'; // 默认中文
-
+        let currentLang = 'zh'; 
         function toggleLang(lang) {
             currentLang = lang;
-            
-            // 切换按钮高亮状态
             document.getElementById('btn-zh').style.cssText = lang === 'zh' ? "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 12px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.3s;" : "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 12px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.3s;";
             document.getElementById('btn-en').style.cssText = lang === 'en' ? "border: 1px solid #22d3ee; background: #22d3ee; color: #000; padding: 4px 12px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.3s;" : "border: 1px solid #164e63; color: #164e63; background: transparent; padding: 4px 12px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.3s;";
-
-            // 切换静态界面文字
             document.querySelectorAll('.lang-zh').forEach(el => el.style.display = lang === 'zh' ? 'inline' : 'none');
             document.querySelectorAll('.lang-en').forEach(el => el.style.display = lang === 'en' ? 'inline' : 'none');
-
-            // 如果有加载好的数据，重新静默渲染一次
-            if (currentData) {
-                renderUI(currentData, true);
-            }
+            if (currentData) renderUI(currentData, true);
         }
 
-        // ==========================================
-        // 🌟 1. 配置 Bmob 云端钥匙 (纯原生 Fetch 架构)
-        // ==========================================
         const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2";
         const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
         
         const currentHost = window.location.hostname;
         const CPOLAR_URL = "https://669b508c.r6.cpolar.top"; 
-        const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1") 
-            ? "http://localhost:5000" 
+        
+        // 🌟 王浦硕必看：演示时，请将这整个网页保存到本地桌面双击打开！
+        // 这样本地打开时，会自动走 127.0.0.1，彻底解决 CORS！
+        const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1" || currentHost === "") 
+            ? "http://127.0.0.1:5000" 
             : CPOLAR_URL;
         
         let currentTimer = null; let currentSimInt = null; let currentData = null;
 
-        setInterval(() => {
-            document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        }, 1000);
+        setInterval(() => { document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19); }, 1000);
 
         // ==========================================
-        // 🌟 2. Three.js 3D 全息渲染逻辑 (挂载到顶部抽屉)
+        // 🌟 2. 核心大招：动态实时 PCG 3D 构建引擎
         // ==========================================
         let scene, camera, renderer, ancientBuildingGroup;
 
@@ -322,7 +247,7 @@
             const container = document.getElementById('top-hologram-container');
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 6, 15);
+            camera.position.set(0, 8, 20); // 稍微拉远，方便看大体量建筑
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -332,27 +257,8 @@
             ancientBuildingGroup = new THREE.Group();
             scene.add(ancientBuildingGroup);
 
-            const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.5 });
-            const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.9 });
-            
-            // 生成古建骨架白模
-            const baseGeo = new THREE.BoxGeometry(7, 0.6, 5);
-            const baseMesh = new THREE.Mesh(baseGeo, highlightMaterial);
-            baseMesh.position.y = -1.5;
-            ancientBuildingGroup.add(baseMesh);
-            
-            const bodyGeo = new THREE.BoxGeometry(5.8, 2.5, 3.8);
-            const bodyMesh = new THREE.Mesh(bodyGeo, material);
-            bodyMesh.position.y = 0.1;
-            ancientBuildingGroup.add(bodyMesh);
-
-            const roofGeo = new THREE.CylinderGeometry(3.5, 6.5, 1.8, 4);
-            const roofMesh = new THREE.Mesh(roofGeo, highlightMaterial);
-            roofMesh.position.y = 2.25;
-            roofMesh.rotation.y = Math.PI / 4; 
-            ancientBuildingGroup.add(roofMesh);
-
-            ancientBuildingGroup.position.y = -0.5;
+            // 初始化生成一个通用抽象模型
+            buildDynamicModel([]); 
 
             animate3D();
         }
@@ -360,38 +266,97 @@
         function animate3D() {
             requestAnimationFrame(animate3D);
             if (ancientBuildingGroup) {
-                ancientBuildingGroup.rotation.y += 0.005; // 缓慢旋转
+                ancientBuildingGroup.rotation.y += 0.005; 
             }
             renderer.render(scene, camera);
         }
 
-        // ==========================================
-        // 🌟 3. 数据拉取与渲染 (原生 Fetch 直连版)
-        // ==========================================
+        // 🌟 读取大模型数据，实时生成比例正确的 3D 几何体！
+        function buildDynamicModel(dnaList) {
+            // 清空旧的 3D 模型
+            while(ancientBuildingGroup.children.length > 0){ 
+                ancientBuildingGroup.remove(ancientBuildingGroup.children[0]); 
+            }
+
+            const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.5 });
+            const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.9 });
+
+            // 解析 DNA 参数
+            let w = 5, d = 3, h = 1; // 默认基准比例
+            let isTulouOrRound = false; // 是否是圆形建筑（如土楼）
+
+            if (dnaList && dnaList.length > 0) {
+                dnaList.forEach(p => {
+                    const name = p.param_name || "";
+                    const valStr = String(p.value || "");
+                    const num = parseFloat(valStr.replace(/[^\d.]/g, ''));
+                    
+                    if (!isNaN(num)) {
+                        // 智能映射宽度、进深、高度
+                        if (name.includes("WIDTH") || name.includes("SPAN") || name.includes("DIAMETER") || name.includes("面阔")) w = num;
+                        if (name.includes("DEPTH") || name.includes("THICKNESS") || name.includes("进深")) d = num;
+                        if (name.includes("BASE_H") || name.includes("HEIGHT") || name.includes("高")) h = num;
+                    }
+                    if(valStr.includes("土楼") || name.includes("DIAMETER") || valStr.includes("圆")) {
+                        isTulouOrRound = true;
+                    }
+                });
+            }
+
+            // 限制最大比例，防止超出画布
+            const maxDim = Math.max(w, d, h, 1);
+            const scaleFactor = 10 / maxDim; 
+            
+            const drawW = w * scaleFactor;
+            const drawD = d * scaleFactor;
+            const drawH = h * scaleFactor;
+
+            if (isTulouOrRound) {
+                // 🌟 生成土楼/堡垒 (圆柱体)
+                const geo = new THREE.CylinderGeometry(drawW/2, drawW/2, drawH * 3, 24);
+                const mesh = new THREE.Mesh(geo, highlightMaterial);
+                ancientBuildingGroup.add(mesh);
+            } else {
+                // 🌟 生成传统殿宇骨架
+                // 1. 台基
+                const baseGeo = new THREE.BoxGeometry(drawW + 1.5, drawH, drawD + 1.5);
+                const baseMesh = new THREE.Mesh(baseGeo, highlightMaterial);
+                baseMesh.position.y = -drawH/2;
+                ancientBuildingGroup.add(baseMesh);
+
+                // 2. 柱网屋身
+                const bodyGeo = new THREE.BoxGeometry(drawW, 3, drawD);
+                const bodyMesh = new THREE.Mesh(bodyGeo, material);
+                bodyMesh.position.y = 1.5;
+                ancientBuildingGroup.add(bodyMesh);
+
+                // 3. 屋顶骨架 (四坡顶)
+                const roofGeo = new THREE.CylinderGeometry(drawW * 0.3, drawW/2 + 1, 2, 4);
+                const roofMesh = new THREE.Mesh(roofGeo, highlightMaterial);
+                roofMesh.position.y = 3 + 1;
+                roofMesh.rotation.y = Math.PI / 4; // 对齐正方形
+                ancientBuildingGroup.add(roofMesh);
+            }
+            
+            ancientBuildingGroup.position.y = -1; // 整体下移对齐镜头
+        }
+
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
             list.innerHTML = `<div style="font-size: 10px; color: #06b6d4; font-family: monospace; padding: 16px 0; text-align: center;" class="blink">SCANNING_CLOUD_NODES...</div>`; 
-            
             try {
                 const bmobUrl = "https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=100";
                 const response = await fetch(bmobUrl, {
                     method: 'GET',
-                    headers: {
-                        "X-Bmob-Application-Id": BMOB_APP_ID,
-                        "X-Bmob-REST-API-Key": BMOB_REST_KEY,
-                        "Content-Type": "application/json"
-                    }
+                    headers: { "X-Bmob-Application-Id": BMOB_APP_ID, "X-Bmob-REST-API-Key": BMOB_REST_KEY, "Content-Type": "application/json" }
                 });
-
                 if (!response.ok) throw new Error("API Error");
-                
                 const data = await response.json();
                 const results = data.results || [];
                 
                 document.getElementById('sync-status').innerText = "DB_CONNECTED";
                 document.getElementById('sync-status').style.color = "#0f0";
                 list.innerHTML = ""; 
-                
                 if (results.length > 0) {
                     results.forEach((item) => {
                         const b = item.payload; 
@@ -399,16 +364,9 @@
                         div.style.cssText = "padding: 12px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 8px; cursor: pointer; transition: 0.3s;";
                         div.onmouseover = () => { div.style.borderColor = "#22d3ee"; div.style.background = "rgba(8, 145, 178, 0.3)"; };
                         div.onmouseout = () => { div.style.borderColor = "rgba(6, 182, 212, 0.2)"; div.style.background = "rgba(8, 145, 178, 0.1)"; };
-                        
                         const nodeID = item.objectId.substring(0, 6).toUpperCase();
-                        
-                        // 动态语言显示
                         const nameDisp = b.name[currentLang] || b.name.zh || "Unknown";
-                        
-                        div.innerHTML = `
-                            <div style="font-size: 8px; color: #0369a1; font-family: monospace;">ASSET_ID: ${nodeID}</div>
-                            <div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${nameDisp}</div>
-                        `;
+                        div.innerHTML = `<div style="font-size: 8px; color: #0369a1; font-family: monospace;">ASSET_ID: ${nodeID}</div><div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${nameDisp}</div>`;
                         div.onclick = () => renderUI(b, false);
                         list.appendChild(div);
                     });
@@ -424,12 +382,10 @@
             const searchInput = document.getElementById('searchInput');
             const target = searchInput.value.trim();
             if (!target) return;
-            
             const btn = document.getElementById('searchBtn');
             btn.innerText = "EXTRACTING...";
             btn.style.pointerEvents = "none";
             btn.style.opacity = "0.5";
-
             document.getElementById('satellite-wrapper').classList.remove('active');
             document.getElementById('no-img-msg').style.display = "flex";
             
@@ -456,36 +412,21 @@
             const pBar = document.getElementById('progress-bar');
             const pText = document.getElementById('progress-text');
             const pLog = document.getElementById('npu-log');
-            
             pLog.innerText = `> Extracting dimensions for '${name}'...`;
             
             currentSimInt = setInterval(() => {
-                if (progress < 95) {
-                    progress += (Math.random() * 5); 
-                    if(progress > 95) progress = 95;
-                    pBar.style.width = `${progress}%`;
-                    pText.innerText = `${Math.floor(progress)}%`;
-                }
+                if (progress < 95) { progress += (Math.random() * 5); if(progress > 95) progress = 95; pBar.style.width = `${progress}%`; pText.innerText = `${Math.floor(progress)}%`; }
             }, 800);
 
             try {
-                // 🌟 终极穿透方案：加入所有可能绕过隧道的头部伪装
                 const res = await fetch(`${API_BASE}/api/trigger_crawl`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true',  // 穿透 ngrok
-                        'Bypass-Tunnel-Reminder': 'true'       // 穿透 localtunnel/cpolar
-                    },
+                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', 'Bypass-Tunnel-Reminder': 'true' },
                     body: JSON.stringify({ target: name, force: force })
                 });
-                
                 const data = await res.json();
                 clearInterval(currentSimInt);
-                
-                pBar.style.width = "100%";
-                pText.innerText = "100%";
-                pLog.innerText = "> Extraction Complete.";
+                pBar.style.width = "100%"; pText.innerText = "100%"; pLog.innerText = "> Extraction Complete.";
 
                 if (data.status !== "ERROR") {
                     currentData = data.payload;
@@ -498,30 +439,14 @@
                 document.getElementById('scan-state').innerText = "SIGNAL_LOST";
                 pLog.innerText = "> EXECUTION_FAILED / TUNNEL_BLOCKED";
                 pBar.style.width = "0%"; pText.innerText = "ERR";
-                
-                // 增加用户自救隧道通道
-                document.getElementById('content-display').innerHTML = `
-                    <div style="color: #ff3366; font-size: 13px; line-height: 1.8; background: rgba(255,51,102,0.05); border: 1px dashed rgba(255,51,102,0.5); padding: 15px; border-radius: 8px;">
-                        <b>⚠️ 核心网关连接被隧道拦截 (假跨域)</b><br><br>
-                        这是因为 cpolar 等免费隧道在第一次访问时会强行弹出一个警告页面，导致浏览器拦截了 API 请求。<br><br>
-                        <b>🔥 极客解决方案 (一键疏通)：</b><br>
-                        请点击下方链接，新开一个页面。如果您看到了 cpolar 的“安全提示页面”，请点击<b>【Visit Site】</b>或<b>【确认访问】</b>以授权通道。<br><br>
-                        <a href="${API_BASE}/api/cache_list" target="_blank" style="display: inline-block; padding: 6px 12px; background: #00E5FF; color: #000; font-weight: bold; border-radius: 4px; text-decoration: none;">
-                            👉 点击打通安全通道
-                        </a><br><br>
-                        授权完成后，直接回到此页面再次尝试收割即可！
-                    </div>
-                `;
+                document.getElementById('content-display').innerHTML = `<div style="color: #ff3366; font-size: 13px; line-height: 1.8; background: rgba(255,51,102,0.05); border: 1px dashed rgba(255,51,102,0.5); padding: 15px; border-radius: 8px;"><b>⚠️ 核心网关连接被隧道拦截 (假跨域)</b><br><br>这是因为 cpolar 在首次公网访问时会弹安全页拦截。<br><br><b>🔥 终极逃课建议 (华为演示必看)：</b><br>请不要在 GitHub 网页上点击收割。请将这个 <code>index.html</code> 下载到电脑桌面，双击在本地打开！它会自动连接本地 Kali 的 127.0.0.1:5000 端口，体验光速且绝对不跨域！</div>`;
             }
         }
 
         function renderUI(item, skipAnimation) {
             if (currentTimer) clearInterval(currentTimer);
-
-            currentData = item; // 缓存当前数据，供语言切换使用
-
+            currentData = item; 
             const contentMap = item.content || {};
-            // 根据当前语言提取数据
             const text = contentMap[currentLang] || contentMap.zh || "DATA_CORRUPTED";
             const targetName = item.name[currentLang] || item.name.zh || "UNKNOWN_TARGET";
 
@@ -530,42 +455,27 @@
             document.getElementById('btn-open-drawer').style.display = 'block';
             document.getElementById('btn-open-3d').style.display = 'block';
 
-            // 🌟 加载并显示羽化边缘全息卫星图
+            // 🌟 通知 3D 引擎实时重建动态模型！
+            const dnaList = item.pcg_dna || [];
+            buildDynamicModel(dnaList);
+
             let lat = 39.9, lng = 116.4;
-            if (item.academic_proof && item.academic_proof.coordinates) {
-                lat = item.academic_proof.coordinates.lat || lat;
-                lng = item.academic_proof.coordinates.lng || lng;
-            }
-            
+            if (item.academic_proof && item.academic_proof.coordinates) { lat = item.academic_proof.coordinates.lat || lat; lng = item.academic_proof.coordinates.lng || lng; }
             const wrapper = document.getElementById('satellite-wrapper');
             const mapImg = document.getElementById('satellite-map');
             mapImg.src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=17&l=sat`;
-            
-            mapImg.onload = () => {
-                wrapper.classList.add('active'); // 激活动画与显示
-                document.getElementById('no-img-msg').style.display = 'none';
-            };
+            mapImg.onload = () => { wrapper.classList.add('active'); document.getElementById('no-img-msg').style.display = 'none'; };
 
             document.getElementById('scan-state').innerText = "SATELLITE_LINKED";
             document.getElementById('scan-state').style.color = "#0f0";
             
             const contentBox = document.getElementById('content-display');
-            if (skipAnimation) {
-                contentBox.innerHTML = text;
-                updateDrawer(item);
-            } else {
+            if (skipAnimation) { contentBox.innerHTML = text; updateDrawer(item); } 
+            else {
                 let i = 0;
                 currentTimer = setInterval(() => {
-                    if (i < text.length) {
-                        contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
-                        i++;
-                        contentBox.scrollTop = contentBox.scrollHeight;
-                    } else {
-                        clearInterval(currentTimer);
-                        const cursor = contentBox.querySelector('.cursor');
-                        if (cursor) cursor.style.display = 'none';
-                        updateDrawer(item); 
-                    }
+                    if (i < text.length) { contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>'; i++; contentBox.scrollTop = contentBox.scrollHeight; } 
+                    else { clearInterval(currentTimer); const cursor = contentBox.querySelector('.cursor'); if (cursor) cursor.style.display = 'none'; updateDrawer(item); }
                 }, 15); 
             }
         }
@@ -573,89 +483,49 @@
         function updateDrawer(data) {
             const displayName = data.name[currentLang] || data.name?.zh || "UNKNOWN";
             document.getElementById('drawer-name').innerText = displayName;
-
             const container = document.getElementById('pcg-dna-container');
             container.innerHTML = ""; 
-            
             const dnaList = data.pcg_dna || [];
             
             if (Array.isArray(dnaList) && dnaList.length > 0) {
                 dnaList.forEach(p => {
-                    const row = document.createElement('div');
-                    row.className = "data-row";
-                    // 智能提取多语言标签
+                    const row = document.createElement('div'); row.className = "data-row";
                     const label = currentLang === 'en' ? (p.param_name || "PARAM") : (p.label_zh || "参数");
-                    const code = p.param_name || "UNKNOWN_VAR";
-                    const value = p.value || "---";
-                    row.innerHTML = `<label>${label} <br/><span style="color:#64748b;">${code}</span></label><span class="code-font" style="color: #00e5ff; font-weight: bold;">${value}</span>`;
+                    row.innerHTML = `<label>${label} <br/><span style="color:#64748b;">${p.param_name || "UNKNOWN_VAR"}</span></label><span class="code-font" style="color: #00e5ff; font-weight: bold;">${p.value || "---"}</span>`;
                     container.appendChild(row);
                 });
-            } else {
-                container.innerHTML = `<div class="data-row"><span class="code-font" style="color: #ff3366;">NO_PCG_MATRIX</span></div>`;
-            }
+            } else if (data.tech_cards && Array.isArray(data.tech_cards) && data.tech_cards.length > 0) {
+                data.tech_cards.forEach(card => {
+                    const row = document.createElement('div'); row.className = "data-row";
+                    const label = card.label?.[currentLang] || card.label?.zh || card.label || "属性";
+                    const value = card.value?.[currentLang] || card.value?.zh || card.value || "---";
+                    row.innerHTML = `<label>${label} <br/><span style="color:#64748b;">LEGACY_DATA</span></label><span class="code-font" style="color: #00e5ff; font-weight: bold;">${value}</span>`;
+                    container.appendChild(row);
+                });
+            } else { container.innerHTML = `<div class="data-row"><span class="code-font" style="color: #ff3366;">NO_PCG_MATRIX (暂无3D参数或旧版档案)</span></div>`; }
 
             if (data.academic_proof && data.academic_proof.coordinates) {
                 const coords = data.academic_proof.coordinates;
-                const latStr = coords.lat ? parseFloat(coords.lat).toFixed(4) : "0.0000";
-                const lngStr = coords.lng ? parseFloat(coords.lng).toFixed(4) : "0.0000";
-                
-                const geoRow = document.createElement('div');
-                geoRow.className = "data-row";
-                geoRow.style.marginTop = "15px";
-                geoRow.style.borderTop = "1px solid rgba(0,229,255,0.3)";
-                geoRow.style.paddingTop = "15px";
-                geoRow.innerHTML = `<label>GEO_COORD <br/><span style="color:#64748b;">(LAT, LNG)</span></label><span class="code-font" style="color: #facc15;">${latStr}, ${lngStr}</span>`;
+                const geoRow = document.createElement('div'); geoRow.className = "data-row"; geoRow.style.cssText = "margin-top: 15px; border-top: 1px solid rgba(0,229,255,0.3); padding-top: 15px;";
+                geoRow.innerHTML = `<label>GEO_COORD <br/><span style="color:#64748b;">(LAT, LNG)</span></label><span class="code-font" style="color: #facc15;">${(coords.lat||0).toFixed(4)}, ${(coords.lng||0).toFixed(4)}</span>`;
                 container.appendChild(geoRow);
             }
         }
 
-        // ==========================================
-        // 🌟 4. 抽屉控制与响应式
-        // ==========================================
         function closeDrawer() { document.getElementById('academic-drawer').classList.remove('active'); }
-        
         function openTopDrawer() {
             const drawer = document.getElementById('top-3d-drawer');
             drawer.classList.add('active');
-            // 确保抽屉滑出后，重新计算画布大小，防止黑屏或变形
-            setTimeout(() => {
-                if(camera && renderer) {
-                    const c = document.getElementById('top-hologram-container');
-                    camera.aspect = c.clientWidth / c.clientHeight;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize(c.clientWidth, c.clientHeight);
-                }
-            }, 600);
+            setTimeout(() => { if(camera && renderer) { const c = document.getElementById('top-hologram-container'); camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight); } }, 600);
         }
         function closeTopDrawer() { document.getElementById('top-3d-drawer').classList.remove('active'); }
-
-        function init() {
-            init3D();
-            loadDynamicCacheList();
-            handleResize();
-            document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') executeHarvest();
-            });
-        }
-
+        function init() { init3D(); loadDynamicCacheList(); handleResize(); document.getElementById('searchInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeHarvest(); }); }
         function handleResize() {
-            const vW = window.innerWidth;
-            const vH = window.innerHeight;
-            const scale = Math.min(vW / 1600, vH / 900);
-            const scaler = document.getElementById('main-scaler');
-            if(scaler) scaler.style.transform = `scale(${scale * 0.95})`;
-            
-            // 调整 3D 画布尺寸 (如果抽屉是打开状态)
-            if(camera && renderer && document.getElementById('top-3d-drawer').classList.contains('active')) {
-                const c = document.getElementById('top-hologram-container');
-                camera.aspect = c.clientWidth / c.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(c.clientWidth, c.clientHeight);
-            }
+            const scale = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+            const scaler = document.getElementById('main-scaler'); if(scaler) scaler.style.transform = `scale(${scale * 0.95})`;
+            if(camera && renderer && document.getElementById('top-3d-drawer').classList.contains('active')) { const c = document.getElementById('top-hologram-container'); camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight); }
         }
-
-        window.onload = init;
-        window.onresize = handleResize;
+        window.onload = init; window.onresize = handleResize;
     </script>
 </body>
 </html>
