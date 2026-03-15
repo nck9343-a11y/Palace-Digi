@@ -23,18 +23,72 @@
         #main-scaler { width: 1600px; height: 900px; transform-origin: center; position: absolute; left: 50%; top: 50%; margin-left: -800px; margin-top: -450px; display: flex; flex-direction: column; padding: 30px; transition: transform 0.3s ease; }
         .glass-panel { background: rgba(10, 15, 30, 0.9) !important; backdrop-filter: blur(15px); border: 1px solid rgba(0, 229, 255, 0.2) !important; clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); box-shadow: inset 0 0 20px rgba(0,229,255,0.05); }
         
-        /* 🌟 卫星图 3D 倾斜全息特效 */
-        .perspective-container { perspective: 1200px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; z-index: 5;}
-        .satellite-3d { 
-            transform: rotateX(45deg) rotateZ(0deg) scale(0.9); 
-            box-shadow: 0 30px 60px rgba(0,229,255,0.3), 0 0 20px rgba(0,229,255,0.5) inset; 
-            border: 2px solid #00E5FF; 
-            border-radius: 12px; 
-            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            filter: contrast(1.2) sepia(0.3) hue-rotate(180deg) saturate(2); /* 赛博朋克滤镜 */
-            max-width: 80%; max-height: 80%; object-fit: cover;
+        /* 🌟 卫星图 3D 倾斜全息特效 - 史诗级优化版 */
+        .perspective-container { perspective: 1000px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; z-index: 5;}
+        
+        .satellite-wrapper {
+            position: relative;
+            width: 85%;
+            height: 85%;
+            transform: rotateX(55deg) rotateZ(0deg);
+            transform-style: preserve-3d;
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: none; /* 由 JS 控制显示 */
         }
-        .satellite-3d:hover { transform: rotateX(15deg) scale(1.05); box-shadow: 0 10px 30px rgba(0,229,255,0.5); cursor: crosshair; }
+        
+        .satellite-wrapper.active {
+            display: block;
+        }
+
+        .satellite-wrapper:hover {
+            transform: rotateX(40deg) rotateZ(0deg) scale(1.05);
+            cursor: crosshair;
+        }
+
+        .satellite-3d { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover;
+            /* 🌟 核心优化 1：边缘径向渐变羽化，完美融入纯黑背景，不留死板的方框 */
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 75%);
+            mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 75%);
+            
+            /* 🌟 核心优化 2：先强行黑白化，再注入高饱和青色，彻底杜绝偏色发红 */
+            filter: grayscale(1) sepia(1) hue-rotate(130deg) saturate(4) brightness(0.9) contrast(1.2);
+            opacity: 0.85;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 🌟 核心优化 3：悬浮发光底座与雷达扫描线 */
+        .satellite-base {
+            position: absolute;
+            inset: 15%;
+            background: transparent;
+            box-shadow: 0 0 60px 20px rgba(0, 229, 255, 0.25);
+            border-radius: 50%;
+            transform: translateZ(-30px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .satellite-scanline {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: rgba(0, 229, 255, 0.8);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 1);
+            animation: scan-map 4s linear infinite;
+            -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 75%);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        @keyframes scan-map {
+            0% { top: 5%; opacity: 0;}
+            10% { opacity: 1;}
+            90% { opacity: 1;}
+            100% { top: 95%; opacity: 0;}
+        }
 
         .grid-overlay { position: absolute; inset: 0; background: linear-gradient(rgba(0, 229, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 255, 0.1) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px); z-index: 1; opacity: 0.5; }
 
@@ -110,9 +164,13 @@
                     
                     <div class="grid-overlay"></div>
                     
-                    <!-- 🌟 恢复为 3D倾斜视角的卫星平面图 -->
+                    <!-- 🌟 史诗级优化：带羽化边缘和扫描线的真·全息投影卫星图 -->
                     <div class="perspective-container">
-                        <img id="satellite-map" src="" class="satellite-3d" style="display: none;" alt="SATELLITE_FEED">
+                        <div id="satellite-wrapper" class="satellite-wrapper">
+                            <div class="satellite-base"></div>
+                            <div class="satellite-scanline"></div>
+                            <img id="satellite-map" src="" class="satellite-3d" alt="SATELLITE_FEED">
+                        </div>
                     </div>
 
                     <div id="no-img-msg" style="position: absolute; inset:0; display:flex; align-items:center; justify-content:center; color: #164e63; font-family: monospace; font-size: 12px; font-style: italic; z-index: 10;">
@@ -372,7 +430,7 @@
             btn.style.pointerEvents = "none";
             btn.style.opacity = "0.5";
 
-            document.getElementById('satellite-map').style.display = "none";
+            document.getElementById('satellite-wrapper').classList.remove('active');
             document.getElementById('no-img-msg').style.display = "flex";
             
             fetchData(target, true).finally(() => {
@@ -472,16 +530,19 @@
             document.getElementById('btn-open-drawer').style.display = 'block';
             document.getElementById('btn-open-3d').style.display = 'block';
 
-            // 🌟 加载倾斜的 3D 卫星图
+            // 🌟 加载并显示羽化边缘全息卫星图
             let lat = 39.9, lng = 116.4;
             if (item.academic_proof && item.academic_proof.coordinates) {
                 lat = item.academic_proof.coordinates.lat || lat;
                 lng = item.academic_proof.coordinates.lng || lng;
             }
+            
+            const wrapper = document.getElementById('satellite-wrapper');
             const mapImg = document.getElementById('satellite-map');
             mapImg.src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=17&l=sat`;
+            
             mapImg.onload = () => {
-                mapImg.style.display = 'block';
+                wrapper.classList.add('active'); // 激活动画与显示
                 document.getElementById('no-img-msg').style.display = 'none';
             };
 
