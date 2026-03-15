@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- 🌟 极客优化：彻底移除报错的 Bmob 官方 SDK，改用底层原生 Fetch 直连，提升加载速度 300% -->
+    <!-- 🌟 极客优化：已彻底连根拔除 Bmob 官方 SDK！防止其拦截和篡改原生 Fetch 请求！ -->
     
     <!-- 🌟 引入 Three.js 3D 引擎 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -91,7 +91,7 @@
                     
                     <div class="grid-overlay"></div>
                     
-                    <!-- 🌟 替换为 3D 渲染容器 -->
+                    <!-- 🌟 3D 渲染容器 -->
                     <div id="hologram-container"></div>
 
                     <div id="no-img-msg" style="color: #164e63; font-family: monospace; font-size: 12px; font-style: italic; z-index: 10;">AWAITING_ADAPTIVE_PARAMETERS...</div>
@@ -166,14 +166,14 @@
 
     <script>
         // ==========================================
-        // 🌟 1. 配置 Bmob 云端钥匙 (使用原生 Fetch 架构)
+        // 🌟 1. 配置 Bmob 云端钥匙 (纯原生 Fetch 架构，抛弃 SDK)
         // ==========================================
         const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2";
         const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
+        
+        // 🚨 严禁出现 Bmob.initialize()，完全防止 SDK 拦截篡改！
 
-        // 🌟 2. 这里的逻辑修复了变量重复定义的问题
         const currentHost = window.location.hostname;
-        // 你最新的 cpolar 地址
         const CPOLAR_URL = "https://669b508c.r6.cpolar.top"; 
         const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1") 
             ? "http://localhost:5000" 
@@ -187,7 +187,7 @@
         }, 1000);
 
         // ==========================================
-        // 🌟 3. Three.js 3D 全息渲染逻辑
+        // 🌟 2. Three.js 3D 全息渲染逻辑
         // ==========================================
         let scene, camera, renderer, ancientBuildingGroup;
 
@@ -205,10 +205,8 @@
             ancientBuildingGroup = new THREE.Group();
             scene.add(ancientBuildingGroup);
 
-            // 赛博风格发光材质
             const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0.8 });
             
-            // 使用抽象的几何组合代表生成过程
             const coreGeo = new THREE.IcosahedronGeometry(2.5, 1);
             const coreMesh = new THREE.Mesh(coreGeo, material);
             coreMesh.position.y = 1.5;
@@ -234,14 +232,14 @@
         }
 
         // ==========================================
-        // 🌟 4. 数据拉取与渲染 (原生 Fetch 直连版)
+        // 🌟 3. 数据拉取与渲染 (纯净 Native Fetch 直连)
         // ==========================================
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
             list.innerHTML = `<div style="font-size: 10px; color: #06b6d4; font-family: monospace; padding: 16px 0; text-align: center;" class="blink">SCANNING_CLOUD_NODES...</div>`; 
             
             try {
-                // 🌟 使用原生 Fetch 绕开 SDK 安全限制
+                // 🌟 直接调用底层 REST API，摆脱一切版本和 SDK 束缚
                 const bmobUrl = "https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=100";
                 const response = await fetch(bmobUrl, {
                     method: 'GET',
@@ -254,7 +252,7 @@
 
                 if (!response.ok) {
                     const errText = await response.text();
-                    throw new Error(`Bmob 拦截: ${response.status} ${errText}`);
+                    throw new Error(`Bmob API Error: ${response.status} ${errText}`);
                 }
                 
                 const data = await response.json();
@@ -290,8 +288,8 @@
                 document.getElementById('sync-status').style.color = "red";
                 list.innerHTML = `
                     <div style="color: #ff3366; font-size: 10px; text-align: left; padding: 8px; background: rgba(255,51,102,0.1); border: 1px solid rgba(255,51,102,0.3);">
-                        <b>❌ 云端防御被拦截</b><br><br>
-                        请去 Bmob 后台 -> [应用配置] 中关闭“API安全码”开关，然后刷新页面即可！
+                        <b>❌ 云端 API 访问受阻</b><br><br>
+                        未能成功加载云端列表数据。<br>如果频繁出现此错误，请检查 Bmob 后台防盗链或安全码设置。
                     </div>
                 `;
             }
@@ -307,7 +305,6 @@
             btn.style.pointerEvents = "none";
             btn.style.opacity = "0.5";
 
-            // 隐藏3D模型，显示等待区
             document.getElementById('hologram-container').style.opacity = "0";
             document.getElementById('no-img-msg').style.display = "block";
             
@@ -390,7 +387,6 @@
             document.getElementById('json-stream').innerText = JSON.stringify(item, null, 2);
             document.getElementById('btn-open-drawer').style.display = 'block';
 
-            // 🌟 动画展示 3D 全息模型
             document.getElementById('no-img-msg').style.display = 'none';
             document.getElementById('hologram-container').style.opacity = "1";
             document.getElementById('scan-state').innerText = "ADAPTIVE_MODEL_GENERATED";
@@ -424,7 +420,6 @@
             const container = document.getElementById('pcg-dna-container');
             container.innerHTML = ""; 
             
-            // 🌟 核心：解析后端传来的全新 pcg_dna 数组
             const dnaList = data.pcg_dna || [];
             
             if (Array.isArray(dnaList) && dnaList.length > 0) {
@@ -438,7 +433,6 @@
                     container.appendChild(row);
                 });
             } else if (data.tech_cards) {
-                // 向下兼容旧版数据
                 data.tech_cards.forEach(card => {
                     const row = document.createElement('div');
                     row.className = "data-row";
@@ -451,7 +445,6 @@
                 container.innerHTML = `<div class="data-row"><span class="code-font" style="color: #ff3366;">未能提取到有效的 3D 参数矩阵</span></div>`;
             }
 
-            // 追加地理坐标
             if (data.academic_proof && data.academic_proof.coordinates) {
                 const coords = data.academic_proof.coordinates;
                 const latStr = coords.lat ? parseFloat(coords.lat).toFixed(4) : "0.0000";
@@ -485,7 +478,6 @@
             const scaler = document.getElementById('main-scaler');
             if(scaler) scaler.style.transform = `scale(${scale * 0.95})`;
             
-            // 调整 3D 画布尺寸
             if(camera && renderer) {
                 const c = document.getElementById('hologram-container');
                 camera.aspect = c.clientWidth / c.clientHeight;
