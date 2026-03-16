@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- 🌟 引入 Three.js 3D 引擎 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
@@ -170,7 +169,6 @@
         </div>
     </div>
 
-    <!-- 🌟 顶部抽屉：专用于存放 3D 动态实时全息投影 -->
     <div id="top-3d-drawer" class="top-drawer-panel">
         <div class="drawer-header">
             <h2 class="cyber-title"><span class="blink">>>></span> POINT_CLOUD_RECONSTRUCTION</h2>
@@ -178,7 +176,6 @@
         </div>
         <div id="top-hologram-container" style="flex:1; width: 100%; position: relative; overflow: hidden; border-radius: 10px; background: radial-gradient(circle at center, rgba(0,229,255,0.05), transparent 70%);">
             <div class="grid-overlay" style="opacity: 0.2;"></div>
-            <!-- 🌟 摄影测绘状态提示 UI -->
             <div id="hologram-status" style="position: absolute; bottom: 20px; left: 20px; font-family: monospace; font-size: 12px; font-weight: bold; z-index: 10; color: #00e5ff;">
                 >>> AWAITING COMMAND...
             </div>
@@ -215,6 +212,44 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🔒 1. 核心大招：AES-256-GCM 浏览器端解密引擎
+        // ==========================================
+        // ⚠️ 必须和 Python 后端保持绝对一致的 32 字节秘钥！
+        const AES_SECRET_KEY = "PalaceDigiSuperSecretKey32Bytes!";
+
+        async function decryptPayload(base64Ciphertext) {
+            try {
+                // 1. 将 Base64 还原为字节数组
+                const binaryString = atob(base64Ciphertext);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // 2. 剥离前 12 字节的随机向量 (IV/Nonce)，剩下的是真实密文
+                const iv = bytes.slice(0, 12);
+                const data = bytes.slice(12);
+
+                // 3. 导入 32 字节秘钥
+                const enc = new TextEncoder();
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    "raw", enc.encode(AES_SECRET_KEY), "AES-GCM", false, ["decrypt"]
+                );
+
+                // 4. 执行 GPU 级硬解密，并验证防篡改标签
+                const decryptedBuffer = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv }, keyMaterial, data
+                );
+                
+                // 5. 还原为 JSON 对象
+                return JSON.parse(new TextDecoder().decode(decryptedBuffer));
+            } catch (e) {
+                console.error("🔒 致命拦截：解密失败！秘钥错误或数据在云端被篡改！", e);
+                return { name: { zh: "DATA_CORRUPTED (密文损坏或秘钥不匹配)" } };
+            }
+        }
+
         let currentLang = 'zh'; 
         function toggleLang(lang) {
             currentLang = lang;
@@ -449,7 +484,7 @@
         }
 
         // ==========================================
-        // 🌟 3. 数据拉取与【本地光速检索】渲染逻辑
+        // 🌟 3. 数据拉取与【本地光速解密】渲染逻辑
         // ==========================================
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
@@ -463,9 +498,21 @@
                 if (!response.ok) throw new Error("API Error");
                 const data = await response.json();
                 
-                globalCloudNodes = data.results || [];
+                const rawNodes = data.results || [];
+                globalCloudNodes = [];
                 
-                document.getElementById('sync-status').innerText = "DB_CONNECTED";
+                // 🔒 遍历云端数据，如果在云端是密文，就在本地浏览器瞬间解密！
+                for (let item of rawNodes) {
+                    if (item.payload_encrypted) {
+                        item.payload = await decryptPayload(item.payload_encrypted);
+                    } else if (!item.payload && !item.payload_encrypted) {
+                        continue; // 跳过无效数据
+                    }
+                    globalCloudNodes.push(item);
+                }
+                
+                // UI 提示升级为 SECURE 模式
+                document.getElementById('sync-status').innerText = "DB_CONNECTED (SECURE)";
                 document.getElementById('sync-status').style.color = "#0f0";
                 
                 renderNodeList(globalCloudNodes);
@@ -474,6 +521,7 @@
                 document.getElementById('sync-status').innerText = "OFFLINE";
                 document.getElementById('sync-status').style.color = "red";
                 list.innerHTML = `<div style="color: #ff3366; font-size: 10px; padding: 8px;">❌ 云端访问受阻</div>`;
+                console.error(error);
             }
         }
 
@@ -488,13 +536,18 @@
 
             nodes.forEach((item) => {
                 const b = item.payload; 
+                if(!b) return; // 容错处理
+                
                 const div = document.createElement('div');
                 div.style.cssText = "padding: 12px; background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); margin-bottom: 8px; cursor: pointer; transition: 0.3s;";
                 div.onmouseover = () => { div.style.borderColor = "#22d3ee"; div.style.background = "rgba(8, 145, 178, 0.3)"; };
                 div.onmouseout = () => { div.style.borderColor = "rgba(6, 182, 212, 0.2)"; div.style.background = "rgba(8, 145, 178, 0.1)"; };
                 const nodeID = item.objectId.substring(0, 6).toUpperCase();
-                const nameDisp = b.name[currentLang] || b.name.zh || "Unknown";
-                div.innerHTML = `<div style="font-size: 8px; color: #0369a1; font-family: monospace;">ASSET_ID: ${nodeID}</div><div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${nameDisp}</div>`;
+                
+                // 适配解密后的 JSON 结构
+                const nameDisp = b.name ? (b.name[currentLang] || b.name.zh) : "Unknown";
+                
+                div.innerHTML = `<div style="font-size: 8px; color: #0369a1; font-family: monospace;">ASSET_ID: ${nodeID} [AES_DECRYPTED]</div><div style="font-size: 12px; font-weight: bold; color: rgba(207, 250, 254, 0.8); text-transform: uppercase; margin-top: 4px;">${nameDisp}</div>`;
                 div.onclick = () => renderUI(b, false);
                 list.appendChild(div);
             });
@@ -516,7 +569,8 @@
                 btn.style.pointerEvents = "auto";
                 btn.style.opacity = "1";
                 searchInput.value = '';
-                renderNodeList(globalCloudNodes);
+                // 重新拉取并解密云端数据
+                loadDynamicCacheList();
             });
         }
 
@@ -549,7 +603,7 @@
                 });
                 const data = await res.json();
                 clearInterval(currentSimInt);
-                pBar.style.width = "100%"; pText.innerText = "100%"; pLog.innerText = "> Extraction Complete.";
+                pBar.style.width = "100%"; pText.innerText = "100%"; pLog.innerText = "> Extraction & Encryption Complete.";
 
                 if (data.status !== "ERROR") {
                     currentData = data.payload;
@@ -566,7 +620,7 @@
                     <div style="color: #ff3366; font-size: 13px; line-height: 1.8; background: rgba(255,51,102,0.05); border: 1px dashed rgba(255,51,102,0.5); padding: 15px; border-radius: 8px;">
                         <b>⚠️ 核心网关连接被隧道拦截 (假跨域)</b><br><br>
                         这是因为 cpolar 在首次公网访问时会弹安全页拦截。<br><br>
-                        <b>🔥 终极逃课建议 (华为演示必看)：</b><br>
+                        <b>🔥 终极逃课建议 (演示必看)：</b><br>
                         如果您在公网（如 GitHub Pages）上演示，必须先<b>点击下方链接手动打通 cpolar 隧道</b>！<br>
                         <a href="${API_BASE}/api/cache_list" target="_blank" style="display: inline-block; padding: 6px 12px; background: #00E5FF; color: #000; font-weight: bold; border-radius: 4px; text-decoration: none; margin-top: 10px;">
                             👉 第一步：点击我，在弹出的新网页里点击【Visit Site】
@@ -583,7 +637,7 @@
             currentData = item; 
             const contentMap = item.content || {};
             const text = contentMap[currentLang] || contentMap.zh || "DATA_CORRUPTED";
-            const targetName = item.name[currentLang] || item.name.zh || "UNKNOWN_TARGET";
+            const targetName = item.name ? (item.name[currentLang] || item.name.zh) : "UNKNOWN_TARGET";
 
             document.getElementById('target-name').innerText = targetName;
             document.getElementById('json-stream').innerText = JSON.stringify(item, null, 2);
@@ -615,7 +669,7 @@
         }
 
         function updateDrawer(data) {
-            const displayName = data.name[currentLang] || data.name?.zh || "UNKNOWN";
+            const displayName = data.name ? (data.name[currentLang] || data.name?.zh) : "UNKNOWN";
             document.getElementById('drawer-name').innerText = displayName;
             const container = document.getElementById('pcg-dna-container');
             container.innerHTML = ""; 
