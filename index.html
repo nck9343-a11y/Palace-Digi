@@ -490,7 +490,7 @@
             const list = document.getElementById('file-list');
             list.innerHTML = `<div style="font-size: 10px; color: #06b6d4; font-family: monospace; padding: 16px 0; text-align: center;" class="blink">SCANNING_CLOUD_NODES...</div>`; 
             try {
-                const bmobUrl = "https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=90";
+                const bmobUrl = "https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=50";
                 const response = await fetch(bmobUrl, {
                     method: 'GET',
                     headers: { "X-Bmob-Application-Id": BMOB_APP_ID, "X-Bmob-REST-API-Key": BMOB_REST_KEY, "Content-Type": "application/json" }
