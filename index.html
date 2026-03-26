@@ -3,150 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Palace-Digi | Adaptive PCG Engine</title>
+    <title>Palace-Digi | 营造法式数字中枢</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        navy: { 800: '#0f172a', 900: '#020617' },
-                        cyan: { 400: '#22d3ee', 500: '#06b6d4', 900: '#164e63' }
+                        ink: { 800: '#1a1a1a', 900: '#0a0a0a' }, // 墨黑
+                        imperial: { 500: '#A93B3B', 900: '#4A1515' }, // 故宫朱砂红
+                        gold: { 300: '#FDE047', 400: '#EAB308', 500: '#CA8A04', 600: '#A16207' }, // 赤金
+                        jade: { 400: '#34D399', 500: '#10B981', 900: '#064E3B' } // 琉璃青
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         mono: ['JetBrains Mono', 'Courier New', 'monospace'],
-                        display: ['Orbitron', 'sans-serif'],
+                        serif: ['"Noto Serif SC"', '"Songti SC"', 'serif'], // 古典宋体
                     }
                 }
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;600;900&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
-        /* 🌟 高级定制样式 */
+        /* 🌟 东方赛博主题样式 */
         body { 
-            background-color: #020617; 
-            color: #cbd5e1; 
+            background-color: #0a0a0a; 
+            color: #d1d5db; 
             margin: 0; 
             overflow: hidden; 
-            background-image: radial-gradient(circle at 1px 1px, rgba(34, 211, 238, 0.05) 1px, transparent 0); 
-            background-size: 40px 40px; 
+            /* 背景替换为类似宣纸纹理混合点阵的暗纹 */
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(202, 138, 4, 0.08) 1px, transparent 0),
+                linear-gradient(rgba(10, 10, 10, 0.9), rgba(10, 10, 10, 0.9)); 
+            background-size: 32px 32px, 100% 100%; 
         }
 
-        /* 高级毛玻璃卡片 */
+        /* 带有古典窗棂意象的高级毛玻璃卡片 */
         .glass-card { 
-            background: rgba(15, 23, 42, 0.6); 
-            backdrop-filter: blur(16px); 
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(34, 211, 238, 0.1); 
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(15, 15, 15, 0.7); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(202, 138, 4, 0.2); /* 哑光金边 */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(202, 138, 4, 0.02);
+            position: relative;
+            transition: all 0.4s ease;
         }
-        .glass-card:hover {
-            border-color: rgba(34, 211, 238, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        
+        /* 四角加入古典回纹/金属包角修饰 */
+        .glass-card::before, .glass-card::after {
+            content: ''; position: absolute; width: 12px; height: 12px; pointer-events: none;
+            border: 1px solid rgba(202, 138, 4, 0.6); transition: all 0.3s ease;
         }
+        .glass-card::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .glass-card::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+        .glass-card:hover { border-color: rgba(202, 138, 4, 0.4); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(202, 138, 4, 0.05); }
 
-        /* 隐藏滚动条但保留功能 */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 呼吸光标 */
-        .cursor { display: inline-block; width: 6px; height: 14px; background: #22d3ee; animation: blink 0.8s infinite; vertical-align: middle; margin-left: 2px;}
+        .cursor { display: inline-block; width: 6px; height: 14px; background: #CA8A04; animation: blink 0.8s infinite; vertical-align: middle; margin-left: 2px;}
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        /* 发光闪烁字 */
         .blink-text { animation: blink-text-anim 2s infinite; }
-        @keyframes blink-text-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; text-shadow: 0 0 10px rgba(34,211,238,0.5); } }
+        @keyframes blink-text-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; text-shadow: 0 0 10px rgba(202,138,4,0.5); } }
 
-        /* 🌟 卫星图特效保留 */
+        /* 🌟 卫星图特效 - 色调改为古铜/水墨色 */
         .perspective-container { perspective: 1000px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; z-index: 5;}
         .satellite-wrapper {
             position: relative; width: 100%; height: 100%; transform: rotateX(50deg) scale(0.9);
             transform-style: preserve-3d; transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-            display: none; border-radius: 12px; overflow: hidden;
+            display: none; overflow: hidden; border: 1px solid rgba(202,138,4,0.3);
         }
         .satellite-wrapper.active { display: block; }
-        .satellite-wrapper:hover { transform: rotateX(30deg) scale(1); cursor: crosshair; box-shadow: 0 20px 50px -10px rgba(34,211,238,0.3); }
+        .satellite-wrapper:hover { transform: rotateX(30deg) scale(1); cursor: crosshair; box-shadow: 0 20px 50px -10px rgba(202,138,4,0.2); }
         .satellite-3d { 
             width: 100%; height: 100%; object-fit: cover;
-            filter: grayscale(0.8) hue-rotate(180deg) brightness(0.8) contrast(1.2);
+            /* 滤镜：降低饱和度，增加暖金色调，呈现古画质感 */
+            filter: grayscale(0.6) sepia(0.5) hue-rotate(5deg) brightness(0.8) contrast(1.1);
             opacity: 0.9; position: relative; z-index: 2;
         }
         .satellite-scanline {
             position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: rgba(34, 211, 238, 0.8); box-shadow: 0 0 15px rgba(34, 211, 238, 1);
-            animation: scan-map 3s linear infinite; z-index: 3; pointer-events: none;
+            background: rgba(202, 138, 4, 0.8); box-shadow: 0 0 15px rgba(202, 138, 4, 1);
+            animation: scan-map 4s linear infinite; z-index: 3; pointer-events: none;
         }
         @keyframes scan-map { 0% { top: 0%; opacity: 0;} 10% { opacity: 1;} 90% { opacity: 1;} 100% { top: 100%; opacity: 0;} }
 
-        /* 抽屉面板 - 更现代的滑动效果 */
-        .drawer-overlay {
-            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(8px);
-            z-index: 40; opacity: 0; pointer-events: none; transition: 0.4s ease;
-        }
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px); z-index: 40; opacity: 0; pointer-events: none; transition: 0.4s ease; }
         .drawer-overlay.active { opacity: 1; pointer-events: auto; }
         
         .side-drawer { 
             position: fixed; top: 0; right: -500px; width: 450px; height: 100vh; 
-            background: #0f172a; border-left: 1px solid rgba(34, 211, 238, 0.2); 
-            box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5); transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+            background: #0f0f0f; border-left: 1px solid rgba(202, 138, 4, 0.3); 
+            box-shadow: -20px 0 50px rgba(0, 0, 0, 0.8); transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
             z-index: 50; display: flex; flex-col; padding: 24px; box-sizing: border-box;
+            background-image: linear-gradient(rgba(202, 138, 4, 0.03) 1px, transparent 1px); background-size: 100% 40px;
         }
         .side-drawer.active { right: 0; }
 
         .top-drawer { 
             position: fixed; top: -80vh; left: 50%; transform: translateX(-50%); width: 80vw; max-width: 1200px; height: 70vh; 
-            background: #0f172a; border: 1px solid rgba(34, 211, 238, 0.2); border-top: none; 
-            border-radius: 0 0 24px 24px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6); 
-            transition: top 0.6s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50; padding: 24px; display: flex; flex-direction: column; 
+            background: #0f0f0f; border: 1px solid rgba(202, 138, 4, 0.3); border-top: none; 
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8); transition: top 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
+            z-index: 50; padding: 24px; display: flex; flex-direction: column; 
         }
         .top-drawer.active { top: 0; }
 
-        /* 高级输入框 */
-        .pro-input {
-            background: rgba(2, 6, 23, 0.5);
-            border: 1px solid rgba(34, 211, 238, 0.2);
-            transition: all 0.3s ease;
-        }
-        .pro-input:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.1); }
+        .pro-input { background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(202, 138, 4, 0.2); transition: all 0.3s ease; }
+        .pro-input:focus { outline: none; border-color: #EAB308; box-shadow: 0 0 0 1px rgba(202, 138, 4, 0.2); }
         
-        /* 列表项悬浮 */
-        .list-item-pro {
-            border: 1px solid transparent; transition: all 0.2s;
-        }
-        .list-item-pro:hover {
-            background: rgba(34, 211, 238, 0.05); border-color: rgba(34, 211, 238, 0.3); transform: translateX(4px);
-        }
+        .list-item-pro { border: 1px solid transparent; border-bottom: 1px dashed rgba(202,138,4,0.1); transition: all 0.2s; }
+        .list-item-pro:hover { background: rgba(202, 138, 4, 0.08); border-color: rgba(202, 138, 4, 0.3); transform: translateX(4px); }
+        
+        /* 竖排古风标题印章 */
+        .stamp-label { writing-mode: vertical-rl; text-orientation: upright; font-family: 'Noto Serif SC', serif; letter-spacing: 4px; border: 1px solid rgba(169,59,59,0.5); color: #A93B3B; padding: 8px 4px; display: inline-block; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col font-sans">
 
-    <header class="h-16 flex-shrink-0 border-b border-cyan-900/30 bg-navy-900/50 backdrop-blur-md flex items-center justify-between px-6 z-10">
+    <header class="h-16 flex-shrink-0 border-b border-gold-600/30 bg-ink-900/80 backdrop-blur-md flex items-center justify-between px-6 z-10 box-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
         <div class="flex items-center gap-4">
-            <h1 class="font-display font-bold text-2xl text-cyan-400 tracking-wider">
-                PALACE-DIGI <span class="text-cyan-600 text-sm font-mono tracking-normal bg-cyan-900/30 px-2 py-1 rounded ml-2">ADAPTIVE_ENGINE</span>
+            <h1 class="font-serif font-bold text-2xl text-gold-400 tracking-widest drop-shadow-md">
+                数字营造 <span class="text-gold-600/80 text-sm font-mono tracking-normal ml-2">PALACE-DIGI ENGINE</span>
             </h1>
         </div>
         <div class="flex items-center gap-6 font-mono text-xs">
             <div class="flex flex-col text-right">
-                <span class="text-slate-500">OPERATOR</span>
-                <span class="text-cyan-100">王浦硕</span>
+                <span class="text-slate-500 font-serif text-[10px]">掌案 (OPERATOR)</span>
+                <span class="text-gold-200">王浦硕</span>
             </div>
-            <div class="h-8 w-px bg-cyan-900/50"></div>
+            <div class="h-6 w-px bg-gold-600/50"></div>
             <div class="flex flex-col text-right">
-                <span class="text-slate-500">SYSTEM TIME</span>
-                <span id="timestamp" class="text-cyan-400">SYNCING...</span>
+                <span class="text-slate-500 font-serif text-[10px]">时辰 (SYS_TIME)</span>
+                <span id="timestamp" class="text-gold-400">SYNCING...</span>
             </div>
-            <div class="h-8 w-px bg-cyan-900/50"></div>
-            <div class="flex gap-1 bg-navy-800 p-1 rounded-md border border-cyan-900/30">
-                <button onclick="toggleLang('zh')" id="btn-zh" class="px-3 py-1 rounded bg-cyan-500 text-navy-900 font-bold transition-all">ZH</button>
-                <button onclick="toggleLang('en')" id="btn-en" class="px-3 py-1 rounded text-cyan-500 hover:bg-cyan-900/30 transition-all">EN</button>
+            <div class="h-6 w-px bg-gold-600/50"></div>
+            <div class="flex gap-1 bg-ink-800 p-1 border border-gold-600/30">
+                <button onclick="toggleLang('zh')" id="btn-zh" class="px-3 py-1 bg-gold-600 text-ink-900 font-bold transition-all font-serif text-sm">中</button>
+                <button onclick="toggleLang('en')" id="btn-en" class="px-3 py-1 text-gold-500 hover:bg-gold-900/30 transition-all">EN</button>
             </div>
         </div>
     </header>
@@ -155,93 +153,97 @@
         
         <aside class="w-80 flex flex-col gap-4 flex-shrink-0">
             <div class="glass-card p-5 flex flex-col gap-4">
-                <div class="flex items-center gap-2 text-cyan-400 font-mono text-xs tracking-widest font-bold">
-                    <i class="fas fa-satellite-dish"></i> <span>DUAL-ENGINE RADAR</span>
+                <div class="flex justify-between items-center border-b border-gold-600/30 pb-2">
+                    <div class="flex items-center gap-2 text-gold-400 font-serif text-sm tracking-widest font-bold">
+                        <i class="fas fa-compass text-imperial-500"></i> <span>天机阁 · 索骥</span>
+                    </div>
+                    <span class="text-[9px] font-mono text-slate-500">RADAR_NODE</span>
                 </div>
-                <input type="text" id="searchInput" placeholder="输入古建名唤醒云端..." class="pro-input w-full rounded-md px-3 py-2 text-sm text-cyan-100 placeholder-slate-600 font-mono">
-                <button id="searchBtn" onclick="executeHarvest()" class="w-full bg-cyan-950/50 hover:bg-cyan-900 text-cyan-400 border border-cyan-700/50 py-2 rounded-md font-mono text-xs tracking-wider transition-all duration-300">
-                    <span class="lang-zh">[ 部署 NPU 远程收割 ]</span><span class="lang-en" style="display:none;">[ INITIATE REMOTE MINING ]</span>
+                <input type="text" id="searchInput" placeholder="输入古建名唤醒云端阵法..." class="pro-input w-full px-3 py-2 text-sm text-gold-100 placeholder-slate-600 font-mono">
+                <button id="searchBtn" onclick="executeHarvest()" class="w-full bg-imperial-900/40 hover:bg-imperial-900 border border-imperial-500/50 text-gold-300 py-2 font-serif text-sm tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(169,59,59,0.2)]">
+                    <span class="lang-zh">【 祭出 NPU 远程收割 】</span><span class="lang-en font-mono" style="display:none;">[ INITIATE REMOTE MINING ]</span>
                 </button>
             </div>
 
             <div class="glass-card p-5 flex-1 flex flex-col overflow-hidden relative">
-                <div class="flex justify-between items-center mb-4">
-                    <div class="text-slate-400 font-mono text-xs tracking-widest font-bold">CLOUD_NODES</div>
-                    <div id="sync-status" class="text-[10px] font-mono blink-text text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-900">WAITING</div>
+                <div class="flex justify-between items-center mb-4 border-b border-gold-600/30 pb-2">
+                    <div class="text-gold-500 font-serif text-sm tracking-widest font-bold">云端玉简</div>
+                    <div id="sync-status" class="text-[10px] font-mono blink-text text-gold-400 bg-gold-900/30 px-2 py-0.5 border border-gold-600/50">WAITING</div>
                 </div>
-                <div id="file-list" class="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-2"></div>
+                <div id="file-list" class="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-1"></div>
             </div>
         </aside>
 
         <section class="flex-1 grid grid-cols-12 grid-rows-6 gap-6 overflow-hidden">
             
-            <div class="glass-card col-span-8 row-span-4 flex flex-col relative overflow-hidden bg-black/40">
+            <div class="glass-card col-span-8 row-span-4 flex flex-col relative overflow-hidden bg-black/80">
                 <div class="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-start pointer-events-none">
-                    <h2 id="target-name" class="font-display font-bold text-4xl text-white tracking-wider drop-shadow-lg">AWAITING_CMD</h2>
+                    <h2 id="target-name" class="font-serif font-bold text-4xl text-white tracking-widest drop-shadow-lg" style="text-shadow: 2px 2px 10px rgba(202,138,4,0.5);">卷宗待查</h2>
                     <div class="flex gap-3 pointer-events-auto">
-                        <button id="btn-open-3d" onclick="openTopDrawer()" class="hidden px-4 py-2 bg-navy-900/80 border border-cyan-500/50 text-cyan-400 rounded-lg hover:bg-cyan-900/50 hover:border-cyan-400 transition-all backdrop-blur font-mono text-xs shadow-[0_0_15px_rgba(34,211,238,0.1)]">
-                            <i class="fas fa-cube mr-2"></i><span class="lang-zh">AI 点云重构</span><span class="lang-en" style="display:none;">POINT CLOUD MOCKUP</span>
+                        <button id="btn-open-3d" onclick="openTopDrawer()" class="hidden px-4 py-2 bg-ink-900/80 border border-gold-500/50 text-gold-400 hover:bg-gold-900/50 hover:border-gold-300 transition-all backdrop-blur font-serif text-sm shadow-[0_0_15px_rgba(202,138,4,0.1)]">
+                            <i class="fas fa-cube mr-2 text-imperial-500"></i><span class="lang-zh">太虚点云重构</span><span class="lang-en font-mono text-xs" style="display:none;">POINT CLOUD MOCKUP</span>
                         </button>
-                        <button id="btn-open-drawer" onclick="document.getElementById('drawer-overlay').classList.add('active'); document.getElementById('academic-drawer').classList.add('active')" class="hidden px-4 py-2 bg-cyan-500 text-navy-900 border border-transparent rounded-lg hover:bg-cyan-400 transition-all font-mono text-xs font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                            <span class="lang-zh">PCG 蓝图矩阵</span><span class="lang-en" style="display:none;">PCG BLUEPRINT</span> <i class="fas fa-arrow-right ml-1"></i>
+                        <button id="btn-open-drawer" onclick="document.getElementById('drawer-overlay').classList.add('active'); document.getElementById('academic-drawer').classList.add('active')" class="hidden px-4 py-2 bg-gold-600/90 text-ink-900 border border-gold-400 hover:bg-gold-500 transition-all font-serif text-sm font-bold shadow-[0_0_15px_rgba(202,138,4,0.3)]">
+                            <span class="lang-zh">营造法式矩阵</span><span class="lang-en font-mono text-xs" style="display:none;">PCG BLUEPRINT</span> <i class="fas fa-scroll ml-1"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="flex-1 perspective-container bg-[#020617] relative">
-                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgNDBoNDBWMEgwem0zOSAxdjM5SDFWMWgzOHoiIGZpbGw9IiMzM2RkZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-30"></div>
+                <div class="flex-1 perspective-container bg-[#050505] relative">
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xMCAxMGgyMHYyMEgxMHpNNSAxNWg1VjVoMTB2NWgxMFY1SDV6IiBzdHJva2U9InJnYmEoMjAyLCAxMzgsIDQsIDAuMDUpIiBmaWxsPSJub25lIi8+PC9zdmc+')] opacity-50"></div>
                     
-                    <div id="satellite-wrapper" class="satellite-wrapper shadow-2xl shadow-cyan-900/20 border border-cyan-800/30">
+                    <div id="satellite-wrapper" class="satellite-wrapper shadow-[0_20px_60px_-15px_rgba(202,138,4,0.3)]">
                         <div class="satellite-scanline"></div>
                         <img id="satellite-map" src="" class="satellite-3d" alt="">
                     </div>
                     
-                    <div id="no-img-msg" class="absolute inset-0 flex items-center justify-center font-mono text-sm text-cyan-700 tracking-widest z-10">
-                        <span class="lang-zh">等待卫星轨道链路介入...</span><span class="lang-en" style="display:none;">AWAITING_SATELLITE_UPLINK...</span>
+                    <div id="no-img-msg" class="absolute inset-0 flex items-center justify-center font-serif text-lg text-gold-700/50 tracking-widest z-10">
+                        <span class="lang-zh">等待星宿轨迹接入...</span><span class="lang-en font-mono text-sm" style="display:none;">AWAITING_SATELLITE_UPLINK...</span>
                     </div>
                     
-                    <div class="absolute bottom-6 left-6 font-mono text-[10px] text-cyan-600 tracking-widest z-20 flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
-                        LINK_STATUS: <span id="scan-state" class="text-white font-bold blink-text">STANDBY</span>
+                    <div class="absolute bottom-6 left-6 font-mono text-[10px] text-gold-600/70 tracking-widest z-20 flex items-center gap-2">
+                        <div class="w-2 h-2 bg-imperial-500 rotate-45 animate-pulse"></div>
+                        LINK_STATUS: <span id="scan-state" class="text-gold-200 font-bold blink-text">STANDBY</span>
                     </div>
                 </div>
             </div>
 
             <div class="glass-card col-span-8 row-span-2 p-6 flex flex-col">
-                <div class="text-xs font-mono text-slate-500 tracking-widest mb-3 border-b border-slate-800 pb-2 flex justify-between">
-                    <span>ARCHITECTURAL_CONTEXT</span>
-                    <i class="fas fa-align-left"></i>
+                <div class="text-sm font-serif text-gold-500/80 tracking-widest mb-3 border-b border-gold-800/50 pb-2 flex justify-between items-center">
+                    <span>考工记 · 渊源 (CONTEXT)</span>
+                    <i class="fas fa-feather-alt text-imperial-500"></i>
                 </div>
-                <div id="content-display" class="flex-1 overflow-y-auto scrollbar-hide text-sm text-slate-300 leading-relaxed text-justify font-light"></div>
+                <div id="content-display" class="flex-1 overflow-y-auto scrollbar-hide text-[15px] text-slate-300 leading-loose text-justify font-serif font-light"></div>
             </div>
 
             <div class="col-span-4 row-span-6 flex flex-col gap-6">
                 
                 <div class="glass-card p-6 flex flex-col justify-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-bl-full"></div>
-                    <div class="text-[10px] font-mono text-cyan-600 tracking-widest mb-4 flex justify-between items-center">
-                        <span>AI_MINER // CORE_NODE</span>
-                        <i class="fas fa-microchip text-cyan-500"></i>
+                    <div class="absolute top-4 right-4 stamp-label opacity-30 text-[10px]">算力枢纽</div>
+                    
+                    <div class="text-[10px] font-mono text-gold-600 tracking-widest mb-4 flex justify-between items-center border-b border-gold-800/30 pb-2">
+                        <span>AI_MINER // 算力炉鼎</span>
+                        <i class="fas fa-fire text-imperial-500"></i>
                     </div>
                     
-                    <div class="flex justify-between text-xs font-mono text-cyan-300 mb-2">
-                        <span>EXTRACTION_PROGRESS</span>
-                        <span id="progress-text" class="font-bold">0%</span>
+                    <div class="flex justify-between text-xs font-mono text-gold-300 mb-2 mt-2">
+                        <span>炼化进度 (EXTRACTION)</span>
+                        <span id="progress-text" class="font-bold text-imperial-400">0%</span>
                     </div>
-                    <div class="w-full h-2 bg-navy-900 rounded-full overflow-hidden border border-cyan-900/50 mb-3">
-                        <div id="progress-bar" class="h-full bg-cyan-400 w-0 transition-all duration-300 relative shadow-[0_0_10px_#22d3ee]">
-                            <div class="absolute inset-0 bg-white/30 animate-[scan-map_1s_linear_infinite]"></div>
+                    <div class="w-full h-1.5 bg-ink-900 overflow-hidden border border-gold-800/50 mb-3">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-gold-600 to-imperial-500 w-0 transition-all duration-300 relative shadow-[0_0_15px_#CA8A04]">
+                            <div class="absolute inset-0 bg-white/20 animate-[scan-map_1s_linear_infinite]"></div>
                         </div>
                     </div>
-                    <div id="npu-log" class="text-[10px] font-mono text-slate-500 truncate mt-1">System online, waiting for payload...</div>
+                    <div id="npu-log" class="text-[10px] font-mono text-slate-500 truncate mt-1">阵法已就绪，静候神谕...</div>
                 </div>
 
                 <div class="glass-card flex-1 p-6 flex flex-col overflow-hidden">
-                    <div class="text-xs font-mono text-slate-500 tracking-widest mb-3 border-b border-slate-800 pb-2 flex justify-between">
-                        <span>RAW_JSON_STREAM</span>
+                    <div class="text-sm font-serif text-gold-500/80 tracking-widest mb-3 border-b border-gold-800/50 pb-2 flex justify-between items-center">
+                        <span>底层符文 (RAW_STREAM)</span>
                         <i class="fas fa-code"></i>
                     </div>
-                    <pre id="json-stream" class="flex-1 overflow-auto scrollbar-hide text-[11px] text-cyan-400/60 font-mono whitespace-pre-wrap break-all leading-tight mt-2">/* Awaiting Node Data... */</pre>
+                    <pre id="json-stream" class="flex-1 overflow-auto scrollbar-hide text-[11px] text-gold-400/50 font-mono whitespace-pre-wrap break-all leading-relaxed mt-2">/* Awaiting Node Data... */</pre>
                 </div>
 
             </div>
@@ -251,58 +253,63 @@
     <div id="drawer-overlay" class="drawer-overlay" onclick="closeAllDrawers()"></div>
 
     <aside id="academic-drawer" class="side-drawer">
-        <div class="flex justify-between items-center border-b border-cyan-900/50 pb-4 mb-6 mt-2">
-            <h2 class="font-display font-bold text-xl text-cyan-400">UE5_BLUEPRINT</h2>
+        <div class="flex justify-between items-center border-b border-gold-600/50 pb-4 mb-6 mt-2">
+            <h2 class="font-serif font-bold text-2xl text-gold-400 tracking-widest">营造矩阵 <span class="text-sm font-mono text-gold-600 ml-2">BLUEPRINT</span></h2>
             <button onclick="closeAllDrawers()" class="text-slate-500 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>
         </div>
         
-        <div class="bg-cyan-900/20 border border-cyan-800/50 p-4 rounded-lg mb-6 text-xs text-cyan-100/80 leading-relaxed font-sans">
-            <i class="fas fa-layer-group text-cyan-400 mr-2 mb-2"></i>
-            <b class="lang-zh text-cyan-300">自适应 3D 生成矩阵：</b><b class="lang-en text-cyan-300" style="display:none;">Adaptive Matrix:</b><br>
-            <span class="lang-zh">参数由大模型动态提炼，直接输出适配该建筑类型的最优 3D 参数。</span>
-            <span class="lang-en" style="display:none;">Parameters dynamically extracted for procedural generation.</span>
+        <div class="bg-gold-900/10 border border-gold-800/50 p-4 mb-6 text-sm text-gold-200/80 leading-loose font-serif relative">
+            <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold-500"></div>
+            <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold-500"></div>
+            <i class="fas fa-yin-yang text-imperial-500 mr-2"></i>
+            <b class="lang-zh text-gold-300">自适应空间阵法：</b><b class="lang-en text-gold-300 font-mono" style="display:none;">Adaptive Matrix:</b><br>
+            <span class="lang-zh">由核心天机模型动态提炼，直接输出适配该古建拓扑的最优三维参数。</span>
+            <span class="lang-en font-mono text-xs" style="display:none;">Parameters dynamically extracted for procedural generation.</span>
         </div>
 
         <div class="flex-1 overflow-y-auto scrollbar-hide flex flex-col font-mono pr-2">
-            <div class="mb-4 pb-2 border-b border-slate-800 flex justify-between items-end">
-                <span class="text-xs text-slate-500">ASSET_ID</span>
-                <span id="drawer-name" class="text-sm font-bold text-white uppercase">LOADING...</span>
+            <div class="mb-6 pb-2 border-b border-gold-800 flex justify-between items-end">
+                <span class="text-xs text-slate-500 font-serif">图纸编号 (ID)</span>
+                <span id="drawer-name" class="text-sm font-bold text-white uppercase font-serif tracking-wider">LOADING...</span>
             </div>
             
-            <div class="mt-4 mb-3 flex items-center gap-2">
-                <span class="text-xs font-bold text-cyan-500 bg-cyan-950 px-2 py-1 rounded">ADAPTIVE_ARCH_DNA</span>
-                <div class="flex-1 h-px bg-cyan-900/50"></div>
+            <div class="mt-2 mb-4 flex items-center gap-2">
+                <span class="text-xs font-bold text-gold-400 bg-gold-900/30 px-2 py-1 border border-gold-700/50">数 字 榫 卯 规 格</span>
+                <div class="flex-1 h-px bg-gold-800/50"></div>
             </div>
             
-            <div id="pcg-dna-container" class="flex flex-col gap-3"></div>
+            <div id="pcg-dna-container" class="flex flex-col gap-4"></div>
         </div>
         
-        <div class="mt-6 pt-4 border-t border-slate-800 text-[10px] text-slate-500 font-mono text-center">
+        <div class="mt-6 pt-4 border-t border-gold-800 text-[10px] text-imperial-600/60 font-mono text-center tracking-widest">
             READY_FOR_UNREAL_ENGINE_EXPORT
         </div>
     </aside>
 
     <div id="top-3d-drawer" class="top-drawer">
-        <div class="flex justify-between items-center mb-4 px-2">
+        <div class="flex justify-between items-center mb-4 px-2 border-b border-gold-800/50 pb-4">
             <div class="flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
-                <h2 class="font-display font-bold text-lg text-white tracking-widest">POINT_CLOUD_RECONSTRUCTION</h2>
+                <div class="w-2 h-2 bg-gold-400 rotate-45 animate-pulse"></div>
+                <h2 class="font-serif font-bold text-xl text-gold-300 tracking-widest">太虚幻境 · 点云重构</h2>
+                <span class="font-mono text-[10px] text-slate-500 ml-2">POINT_CLOUD_RECONSTRUCTION</span>
             </div>
-            <button onclick="closeAllDrawers()" class="text-slate-400 hover:text-white border border-slate-700 hover:bg-slate-800 px-3 py-1 rounded font-mono text-xs transition-all">CLOSE</button>
+            <button onclick="closeAllDrawers()" class="text-gold-500 hover:text-white border border-gold-700 hover:bg-gold-900/50 px-4 py-1 font-serif text-sm transition-all">收起</button>
         </div>
         
-        <div id="top-hologram-container" class="flex-1 bg-black/50 border border-slate-800 rounded-xl relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgNDBoNDBWMEgwem0zOSAxdjM5SDFWMWgzOHoiIGZpbGw9IiMzM2RkZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-20"></div>
+        <div id="top-hologram-container" class="flex-1 bg-ink-900/50 border border-gold-800 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+                <i class="fas fa-compass fa-spin" style="font-size: 400px; animation-duration: 60s;"></i>
+            </div>
             
-            <div id="hologram-status" class="absolute bottom-4 left-4 font-mono text-xs font-bold z-10 text-cyan-400 bg-navy-900/80 px-3 py-2 rounded border border-cyan-900 backdrop-blur">
-                >>> AWAITING COMMAND...
+            <div id="hologram-status" class="absolute bottom-4 left-4 font-mono text-xs font-bold z-10 text-gold-400 bg-ink-900/80 px-4 py-2 border border-gold-800 backdrop-blur shadow-[0_0_15px_rgba(202,138,4,0.1)]">
+                >>> 静候神谕 (AWAITING COMMAND)...
             </div>
         </div>
     </div>
 
 
     <script>
-        // 🔒 1. 核心大招：AES-256-GCM 浏览器端解密引擎
+        // 🔒 1. 核心加密算法保持不变
         const AES_SECRET_KEY = "PalaceDigiSuperSecretKey32Bytes!";
 
         async function decryptPayload(base64Ciphertext) {
@@ -310,65 +317,54 @@
                 const binaryString = atob(base64Ciphertext);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-                const iv = bytes.slice(0, 12);
-                const data = bytes.slice(12);
+                const iv = bytes.slice(0, 12); const data = bytes.slice(12);
                 const enc = new TextEncoder();
-                const keyMaterial = await window.crypto.subtle.importKey(
-                    "raw", enc.encode(AES_SECRET_KEY), "AES-GCM", false, ["decrypt"]
-                );
-                const decryptedBuffer = await window.crypto.subtle.decrypt(
-                    { name: "AES-GCM", iv: iv }, keyMaterial, data
-                );
+                const keyMaterial = await window.crypto.subtle.importKey("raw", enc.encode(AES_SECRET_KEY), "AES-GCM", false, ["decrypt"]);
+                const decryptedBuffer = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, keyMaterial, data);
                 return JSON.parse(new TextDecoder().decode(decryptedBuffer));
             } catch (e) {
-                console.error("🔒 致命拦截：解密失败！秘钥错误或数据在云端被篡改！", e);
-                return { name: { zh: "DATA_CORRUPTED (密文损坏)" } };
+                console.error("解密失败", e); return { name: { zh: "真迹损毁 (DATA_CORRUPTED)" } };
             }
         }
 
         let currentLang = 'zh'; 
         function toggleLang(lang) {
             currentLang = lang;
-            document.getElementById('btn-zh').className = lang === 'zh' ? "px-3 py-1 rounded bg-cyan-500 text-navy-900 font-bold transition-all" : "px-3 py-1 rounded text-cyan-500 hover:bg-cyan-900/30 transition-all";
-            document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1 rounded bg-cyan-500 text-navy-900 font-bold transition-all" : "px-3 py-1 rounded text-cyan-500 hover:bg-cyan-900/30 transition-all";
+            document.getElementById('btn-zh').className = lang === 'zh' ? "px-3 py-1 bg-gold-600 text-ink-900 font-bold transition-all font-serif text-sm" : "px-3 py-1 text-gold-500 hover:bg-gold-900/30 transition-all font-serif text-sm";
+            document.getElementById('btn-en').className = lang === 'en' ? "px-3 py-1 bg-gold-600 text-ink-900 font-bold transition-all" : "px-3 py-1 text-gold-500 hover:bg-gold-900/30 transition-all";
             document.querySelectorAll('.lang-zh').forEach(el => el.style.display = lang === 'zh' ? 'inline' : 'none');
             document.querySelectorAll('.lang-en').forEach(el => el.style.display = lang === 'en' ? 'inline' : 'none');
             if (currentData) renderUI(currentData, true);
         }
 
-        const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2";
-        const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
+        const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2"; const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
         const currentHost = window.location.hostname;
         const CPOLAR_URL = "https://3a480289.r6.cpolar.top"; // 请确保该地址在线
-        const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1" || currentHost === "") 
-            ? "http://127.0.0.1:5000" : CPOLAR_URL;
+        const API_BASE = (currentHost === "localhost" || currentHost === "127.0.0.1" || currentHost === "") ? "http://127.0.0.1:5000" : CPOLAR_URL;
         
-        let currentTimer = null; let currentSimInt = null; let currentData = null;
-        let globalCloudNodes = [];
+        let currentTimer = null; let currentSimInt = null; let currentData = null; let globalCloudNodes = [];
 
         setInterval(() => { document.getElementById('timestamp').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19); }, 1000);
 
-        // UI 辅助函数：关闭抽屉
         function closeAllDrawers() {
             document.getElementById('drawer-overlay').classList.remove('active');
             document.getElementById('academic-drawer').classList.remove('active');
             document.getElementById('top-3d-drawer').classList.remove('active');
         }
 
-        // 🌟 2. 核心大招：点云 (Point Cloud) 粒子聚合引擎
+        // 🌟 2. 核心 3D 引擎 - 颜色从青色调整为赤金/琉璃绿，营造流沙成塔的仙气
         let scene, camera, renderer, ancientBuildingGroup;
         let particles, targetPositions, currentPositions, originalVelocities;
-        let scanState = 0; 
-        let wireframeMeshes = [];
-        const pCount = 8000; 
+        let scanState = 0; let wireframeMeshes = []; const pCount = 8000; 
+
+        // 东方赛博专属颜色：赤金色
+        const DUST_COLOR = 0xD4AF37; 
 
         function init3D() {
             const container = document.getElementById('top-hologram-container');
             scene = new THREE.Scene();
-            // 注意：这里由于 display:none 的问题，首次获取不到宽高，我们在打开面板时更新
             camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight || 1.7, 0.1, 1000);
-            camera.position.set(0, 8, 20); 
-            camera.lookAt(0, 0, 0);
+            camera.position.set(0, 8, 20); camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(container.clientWidth || 800, container.clientHeight || 400);
@@ -377,37 +373,29 @@
             ancientBuildingGroup = new THREE.Group();
             scene.add(ancientBuildingGroup);
 
-            buildDynamicModel([]); 
-            animate3D();
+            buildDynamicModel([]); animate3D();
         }
 
         function animate3D() {
             requestAnimationFrame(animate3D);
-            if (ancientBuildingGroup) ancientBuildingGroup.rotation.y += 0.005; 
+            if (ancientBuildingGroup) ancientBuildingGroup.rotation.y += 0.003; // 旋转速度放慢，更显端庄
 
             if (particles && scanState > 0) {
                 const positions = particles.geometry.attributes.position.array;
                 if (scanState === 1) { 
                     for(let i=0; i<pCount; i++) {
-                        positions[i*3] += originalVelocities[i*3];
-                        positions[i*3+1] += originalVelocities[i*3+1];
-                        positions[i*3+2] += originalVelocities[i*3+2];
+                        positions[i*3] += originalVelocities[i*3]; positions[i*3+1] += originalVelocities[i*3+1]; positions[i*3+2] += originalVelocities[i*3+2];
                         if (positions[i*3] > 30 || positions[i*3] < -30) originalVelocities[i*3] *= -1;
                         if (positions[i*3+1] > 25 || positions[i*3+1] < -10) originalVelocities[i*3+1] *= -1;
                         if (positions[i*3+2] > 30 || positions[i*3+2] < -30) originalVelocities[i*3+2] *= -1;
                     }
-                } 
-                else if (scanState === 2 || scanState === 3) { 
+                } else if (scanState === 2 || scanState === 3) { 
                     for(let i=0; i<pCount; i++) {
-                        positions[i*3] += (targetPositions[i*3] - positions[i*3]) * 0.05;
-                        positions[i*3+1] += (targetPositions[i*3+1] - positions[i*3+1]) * 0.05;
-                        positions[i*3+2] += (targetPositions[i*3+2] - positions[i*3+2]) * 0.05;
+                        positions[i*3] += (targetPositions[i*3] - positions[i*3]) * 0.03; // 聚合速度稍微变柔和
+                        positions[i*3+1] += (targetPositions[i*3+1] - positions[i*3+1]) * 0.03;
+                        positions[i*3+2] += (targetPositions[i*3+2] - positions[i*3+2]) * 0.03;
                     }
-                    if (scanState === 3) {
-                        wireframeMeshes.forEach(m => {
-                            if (m.material.opacity < (m.isHighlight ? 0.9 : 0.5)) m.material.opacity += 0.01;
-                        });
-                    }
+                    if (scanState === 3) { wireframeMeshes.forEach(m => { if (m.material.opacity < (m.isHighlight ? 0.7 : 0.3)) m.material.opacity += 0.01; }); }
                 }
                 particles.geometry.attributes.position.needsUpdate = true;
             }
@@ -417,8 +405,9 @@
         function buildDynamicModel(dnaList) {
             while(ancientBuildingGroup.children.length > 0) ancientBuildingGroup.remove(ancientBuildingGroup.children[0]); 
             wireframeMeshes = [];
-            const material = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0 });
-            const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0x00E5FF, wireframe: true, transparent: true, opacity: 0 });
+            // 白模替换为赤金色的线框
+            const material = new THREE.MeshBasicMaterial({ color: DUST_COLOR, wireframe: true, transparent: true, opacity: 0 });
+            const highlightMaterial = new THREE.MeshBasicMaterial({ color: DUST_COLOR, wireframe: true, transparent: true, opacity: 0 });
 
             let w = 5, d = 3, h = 1, isTulouOrRound = false; 
             if (dnaList && dnaList.length > 0) {
@@ -452,7 +441,7 @@
             currentPositions = new Float32Array(pCount * 3); targetPositions = new Float32Array(pCount * 3); originalVelocities = new Float32Array(pCount * 3);
             for (let i = 0; i < pCount; i++) {
                 currentPositions[i*3] = (Math.random() - 0.5) * 60; currentPositions[i*3+1] = (Math.random() - 0.5) * 60 + 10; currentPositions[i*3+2] = (Math.random() - 0.5) * 60;
-                originalVelocities[i*3] = (Math.random() - 0.5) * 0.8; originalVelocities[i*3+1] = (Math.random() - 0.5) * 0.8; originalVelocities[i*3+2] = (Math.random() - 0.5) * 0.8;
+                originalVelocities[i*3] = (Math.random() - 0.5) * 0.6; originalVelocities[i*3+1] = (Math.random() - 0.5) * 0.6; originalVelocities[i*3+2] = (Math.random() - 0.5) * 0.6;
                 let tx, ty, tz;
                 if (isTulouOrRound) {
                     const r = drawW/2 * (0.85 + Math.random() * 0.15); const angle = Math.random() * Math.PI * 2;
@@ -466,14 +455,14 @@
                 targetPositions[i*3] = tx; targetPositions[i*3+1] = ty; targetPositions[i*3+2] = tz;
             }
             const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
-            particles = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x00E5FF, size: 0.06, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
+            particles = new THREE.Points(geometry, new THREE.PointsMaterial({ color: DUST_COLOR, size: 0.05, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }));
             ancientBuildingGroup.add(particles);
         }
 
-        // 🌟 3. 数据拉取与渲染
+        // 🌟 3. 数据拉取
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
-            list.innerHTML = `<div class="text-xs text-cyan-500 font-mono text-center mt-10 animate-pulse">SCANNING_CLOUD_NODES...</div>`; 
+            list.innerHTML = `<div class="text-xs text-gold-600 font-serif text-center mt-10 animate-pulse">翻阅云端简牍中...</div>`; 
             try {
                 const res = await fetch("https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=50", {
                     method: 'GET', headers: { "X-Bmob-Application-Id": BMOB_APP_ID, "X-Bmob-REST-API-Key": BMOB_REST_KEY, "Content-Type": "application/json" }
@@ -487,32 +476,31 @@
                     else if (!item.payload && !item.payload_encrypted) continue; 
                     globalCloudNodes.push(item);
                 }
-                document.getElementById('sync-status').innerText = "DB_SECURE";
-                document.getElementById('sync-status').classList.replace('text-cyan-400', 'text-green-400');
+                document.getElementById('sync-status').innerText = "阵法已连 (SECURE)";
+                document.getElementById('sync-status').classList.replace('text-gold-400', 'text-jade-400');
                 renderNodeList(globalCloudNodes);
             } catch (error) {
-                document.getElementById('sync-status').innerText = "OFFLINE";
-                document.getElementById('sync-status').classList.replace('text-cyan-400', 'text-red-500');
-                list.innerHTML = `<div class="text-xs text-red-400 p-2 mt-4 text-center">❌ 云端访问受阻</div>`;
+                document.getElementById('sync-status').innerText = "灵脉断绝 (OFFLINE)";
+                document.getElementById('sync-status').classList.replace('text-gold-400', 'text-imperial-500');
+                list.innerHTML = `<div class="text-xs text-imperial-500 p-2 mt-4 text-center">❌ 云端神脉受阻</div>`;
             }
         }
 
         function renderNodeList(nodes) {
             const list = document.getElementById('file-list'); list.innerHTML = ""; 
-            if (nodes.length === 0) {
-                list.innerHTML = `<div class="text-xs text-red-400 text-center border border-red-500/30 rounded p-4 mt-4">NO_MATCHING_ASSET<br><br><span class="text-slate-500">(未找到，请在上方搜割)</span></div>`; return;
-            }
+            if (nodes.length === 0) { list.innerHTML = `<div class="text-xs text-imperial-400 text-center border border-imperial-900/50 rounded p-4 mt-4 font-serif">典籍阁空无一物<br><br><span class="text-gold-700/50 font-mono">(请在上方召唤神识搜割)</span></div>`; return; }
             nodes.forEach((item) => {
                 const b = item.payload; if(!b) return; 
                 const div = document.createElement('div');
-                div.className = "list-item-pro p-3 rounded-lg bg-navy-800/50 cursor-pointer flex flex-col gap-1";
+                div.className = "list-item-pro p-3 cursor-pointer flex flex-col gap-1 relative overflow-hidden";
                 const nodeID = item.objectId.substring(0, 6).toUpperCase();
-                const nameDisp = b.name ? (b.name[currentLang] || b.name.zh) : "Unknown";
+                const nameDisp = b.name ? (b.name[currentLang] || b.name.zh) : "佚名";
                 div.innerHTML = `
-                    <div class="flex justify-between items-center text-[9px] font-mono text-cyan-600/70">
-                        <span>ID: ${nodeID}</span> <i class="fas fa-lock-open text-cyan-800"></i>
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-gold-600 to-transparent opacity-50"></div>
+                    <div class="flex justify-between items-center text-[9px] font-mono text-gold-700/60 pl-2">
+                        <span>玉简_ID: ${nodeID}</span> <i class="fas fa-yin-yang text-gold-800"></i>
                     </div>
-                    <div class="text-sm font-bold text-cyan-100 uppercase truncate">${nameDisp}</div>
+                    <div class="text-[15px] font-bold text-gold-100 uppercase truncate font-serif pl-2 tracking-wide">${nameDisp}</div>
                 `;
                 div.onclick = () => renderUI(b, false);
                 list.appendChild(div);
@@ -520,90 +508,60 @@
         }
 
         function executeHarvest() {
-            const searchInput = document.getElementById('searchInput');
-            const target = searchInput.value.trim(); if (!target) return;
+            const searchInput = document.getElementById('searchInput'); const target = searchInput.value.trim(); if (!target) return;
             const btn = document.getElementById('searchBtn');
-            btn.innerText = "EXTRACTING..."; btn.style.pointerEvents = "none"; btn.classList.add('opacity-50');
-            document.getElementById('satellite-wrapper').classList.remove('active');
-            document.getElementById('no-img-msg').style.display = "flex";
+            btn.innerText = "神机推演中 (EXTRACTING)..."; btn.style.pointerEvents = "none"; btn.classList.add('opacity-50');
+            document.getElementById('satellite-wrapper').classList.remove('active'); document.getElementById('no-img-msg').style.display = "flex";
             
             fetchData(target, true).finally(() => {
-                btn.innerHTML = `<span class="lang-zh">[ 部署 NPU 远程收割 ]</span><span class="lang-en" style="display:${currentLang==='en'?'inline':'none'};">[ INITIATE REMOTE MINING ]</span>`;
-                btn.style.pointerEvents = "auto"; btn.classList.remove('opacity-50');
-                searchInput.value = ''; loadDynamicCacheList();
+                btn.innerHTML = `<span class="lang-zh">【 祭出 NPU 远程收割 】</span><span class="lang-en font-mono" style="display:${currentLang==='en'?'inline':'none'};">[ INITIATE REMOTE MINING ]</span>`;
+                btn.style.pointerEvents = "auto"; btn.classList.remove('opacity-50'); searchInput.value = ''; loadDynamicCacheList();
             });
         }
 
         async function fetchData(name, force = false) {
             if (currentTimer) clearInterval(currentTimer); if (currentSimInt) clearInterval(currentSimInt);
-            document.getElementById('target-name').innerText = "REMOTE_UPLINK...";
-            document.getElementById('scan-state').innerText = "CORE_NODE_ACTIVE";
-            document.getElementById('content-display').innerHTML = "";
-            document.getElementById('json-stream').innerText = "/* SENDING_COMMAND_TO_CORE... */";
-            document.getElementById('btn-open-drawer').classList.add('hidden');
-            document.getElementById('btn-open-3d').classList.add('hidden');
+            document.getElementById('target-name').innerText = "星宿定位中..."; document.getElementById('scan-state').innerText = "炉鼎点燃 (CORE_ACTIVE)";
+            document.getElementById('content-display').innerHTML = ""; document.getElementById('json-stream').innerText = "/* AWAITING_DIVINE_COMMAND... */";
+            document.getElementById('btn-open-drawer').classList.add('hidden'); document.getElementById('btn-open-3d').classList.add('hidden');
             
             let progress = 0; const pBar = document.getElementById('progress-bar'); const pText = document.getElementById('progress-text'); const pLog = document.getElementById('npu-log');
-            pLog.innerText = `> Extracting dimensions for '${name}'...`;
-            currentSimInt = setInterval(() => {
-                if (progress < 95) { progress += (Math.random() * 5); if(progress > 95) progress = 95; pBar.style.width = `${progress}%`; pText.innerText = `${Math.floor(progress)}%`; }
-            }, 800);
+            pLog.innerText = `> 正在剥离 '${name}' 物理维度...`;
+            currentSimInt = setInterval(() => { if (progress < 95) { progress += (Math.random() * 5); if(progress > 95) progress = 95; pBar.style.width = `${progress}%`; pText.innerText = `${Math.floor(progress)}%`; } }, 800);
 
             try {
-                const res = await fetch(`${API_BASE}/api/trigger_crawl`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', 'Bypass-Tunnel-Reminder': 'true' },
-                    body: JSON.stringify({ target: name, force: force })
-                });
+                const res = await fetch(`${API_BASE}/api/trigger_crawl`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', 'Bypass-Tunnel-Reminder': 'true' }, body: JSON.stringify({ target: name, force: force }) });
                 const data = await res.json();
-                clearInterval(currentSimInt);
-                pBar.style.width = "100%"; pText.innerText = "100%"; pLog.innerText = "> Extraction Complete.";
-
-                if (data.status !== "ERROR") {
-                    currentData = data.payload; renderUI(currentData, false);
-                    if (data.status === "GENERATED") setTimeout(loadDynamicCacheList, 1500); 
-                } else throw new Error("Error");
+                clearInterval(currentSimInt); pBar.style.width = "100%"; pText.innerText = "100%"; pLog.innerText = "> 维度剥离完成，卷宗已封印。";
+                if (data.status !== "ERROR") { currentData = data.payload; renderUI(currentData, false); if (data.status === "GENERATED") setTimeout(loadDynamicCacheList, 1500); } else throw new Error("Error");
             } catch (err) {
-                clearInterval(currentSimInt);
-                document.getElementById('target-name').innerText = "LINK_FAILED"; document.getElementById('scan-state').innerText = "SIGNAL_LOST";
-                pLog.innerText = "> EXECUTION_FAILED / TUNNEL_BLOCKED"; pBar.style.width = "0%"; pText.innerText = "ERR";
-                document.getElementById('content-display').innerHTML = `
-                    <div class="bg-red-900/20 border border-red-500/50 p-4 rounded-lg text-red-200 text-sm leading-relaxed mt-4">
-                        <b>⚠️ 核心网关连接被隧道拦截 (假跨域)</b><br><br>
-                        如果您在公网演示，必须先<b>手动打通 cpolar 隧道</b>！<br>
-                        <a href="${API_BASE}/api/cache_list" target="_blank" class="inline-block mt-3 px-4 py-2 bg-cyan-500 text-navy-900 font-bold rounded hover:bg-cyan-400 transition-colors">👉 点我打通隧道 (Visit Site)</a>
-                    </div>
-                `;
+                clearInterval(currentSimInt); document.getElementById('target-name').innerText = "阵法溃散"; document.getElementById('scan-state').innerText = "SIGNAL_LOST";
+                pLog.innerText = "> 灵力枯竭 / 隧道阻滞"; pBar.style.width = "0%"; pText.innerText = "ERR";
+                document.getElementById('content-display').innerHTML = `<div class="bg-imperial-900/20 border border-imperial-500/50 p-4 font-serif text-imperial-200 text-sm leading-relaxed mt-4"><b>⚠️ 神谕被界外结界拦截 (隧道假跨域)</b><br><br>若要在凡间展示，请先<b>点击下方铭文打通穿透法阵</b>！<br><a href="${API_BASE}/api/cache_list" target="_blank" class="inline-block mt-3 px-4 py-2 bg-gold-600 text-ink-900 font-bold hover:bg-gold-500 transition-colors">👉 点我打通结界 (Visit Site)</a></div>`;
             }
         }
 
         function renderUI(item, skipAnimation) {
-            if (currentTimer) clearInterval(currentTimer);
-            currentData = item; 
-            const contentMap = item.content || {}; const text = contentMap[currentLang] || contentMap.zh || "DATA_CORRUPTED";
+            if (currentTimer) clearInterval(currentTimer); currentData = item; 
+            const contentMap = item.content || {}; const text = contentMap[currentLang] || contentMap.zh || "古籍损毁 (DATA_CORRUPTED)";
             
-            document.getElementById('target-name').innerText = item.name ? (item.name[currentLang] || item.name.zh) : "UNKNOWN_TARGET";
+            document.getElementById('target-name').innerText = item.name ? (item.name[currentLang] || item.name.zh) : "无名之所";
             document.getElementById('json-stream').innerText = JSON.stringify(item, null, 2);
-            document.getElementById('btn-open-drawer').classList.remove('hidden');
-            document.getElementById('btn-open-3d').classList.remove('hidden');
+            document.getElementById('btn-open-drawer').classList.remove('hidden'); document.getElementById('btn-open-3d').classList.remove('hidden');
 
             buildDynamicModel(item.pcg_dna || []);
-
-            let lat = 39.9, lng = 116.4;
-            if (item.academic_proof?.coordinates) { lat = item.academic_proof.coordinates.lat || lat; lng = item.academic_proof.coordinates.lng || lng; }
+            let lat = 39.9, lng = 116.4; if (item.academic_proof?.coordinates) { lat = item.academic_proof.coordinates.lat || lat; lng = item.academic_proof.coordinates.lng || lng; }
             const wrapper = document.getElementById('satellite-wrapper'); const mapImg = document.getElementById('satellite-map');
             mapImg.src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=17&l=sat`;
             mapImg.onload = () => { wrapper.classList.add('active'); document.getElementById('no-img-msg').style.display = 'none'; };
 
-            document.getElementById('scan-state').innerText = "SATELLITE_LINKED"; document.getElementById('scan-state').classList.replace('text-white', 'text-green-400');
+            document.getElementById('scan-state').innerText = "星盘锁定 (SATELLITE_LINKED)"; document.getElementById('scan-state').classList.replace('text-gold-200', 'text-jade-400');
             
             const contentBox = document.getElementById('content-display');
             if (skipAnimation) { contentBox.innerHTML = text; updateDrawer(item); } 
             else {
                 let i = 0;
-                currentTimer = setInterval(() => {
-                    if (i < text.length) { contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>'; i++; contentBox.scrollTop = contentBox.scrollHeight; } 
-                    else { clearInterval(currentTimer); const cursor = contentBox.querySelector('.cursor'); if (cursor) cursor.style.display = 'none'; updateDrawer(item); }
-                }, 15); 
+                currentTimer = setInterval(() => { if (i < text.length) { contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>'; i++; contentBox.scrollTop = contentBox.scrollHeight; } else { clearInterval(currentTimer); const cursor = contentBox.querySelector('.cursor'); if (cursor) cursor.style.display = 'none'; updateDrawer(item); } }, 15); 
             }
         }
 
@@ -611,52 +569,37 @@
             document.getElementById('drawer-name').innerText = data.name ? (data.name[currentLang] || data.name?.zh) : "UNKNOWN";
             const container = document.getElementById('pcg-dna-container'); container.innerHTML = ""; 
             const dnaList = data.pcg_dna || [];
-            
             if (Array.isArray(dnaList) && dnaList.length > 0) {
                 dnaList.forEach(p => {
                     const label = currentLang === 'en' ? (p.param_name || "PARAM") : (p.label_zh || "参数");
-                    container.innerHTML += `<div class="flex justify-between items-end border-b border-cyan-900/30 pb-2"><div class="flex flex-col"><span class="text-xs text-slate-300">${label}</span><span class="text-[9px] text-slate-500">${p.param_name || "VAR"}</span></div><span class="text-sm font-bold text-cyan-400">${p.value || "---"}</span></div>`;
+                    container.innerHTML += `<div class="flex justify-between items-end border-b border-gold-900/40 pb-2"><div class="flex flex-col"><span class="text-sm text-gold-200 font-serif">${label}</span><span class="text-[9px] text-gold-700/60">${p.param_name || "VAR"}</span></div><span class="text-sm font-bold text-imperial-400 font-mono">${p.value || "---"}</span></div>`;
                 });
             } else if (data.tech_cards?.length > 0) {
                 data.tech_cards.forEach(card => {
                     const label = card.label?.[currentLang] || card.label?.zh || card.label || "属性"; const value = card.value?.[currentLang] || card.value?.zh || card.value || "---";
-                    container.innerHTML += `<div class="flex justify-between items-end border-b border-cyan-900/30 pb-2"><div class="flex flex-col"><span class="text-xs text-slate-300">${label}</span><span class="text-[9px] text-slate-500">LEGACY</span></div><span class="text-sm font-bold text-cyan-400">${value}</span></div>`;
+                    container.innerHTML += `<div class="flex justify-between items-end border-b border-gold-900/40 pb-2"><div class="flex flex-col"><span class="text-sm text-gold-200 font-serif">${label}</span><span class="text-[9px] text-gold-700/60">LEGACY</span></div><span class="text-sm font-bold text-imperial-400 font-mono">${value}</span></div>`;
                 });
-            } else container.innerHTML = `<div class="text-red-400 text-xs">NO_PCG_MATRIX</div>`;
+            } else container.innerHTML = `<div class="text-imperial-400 text-xs font-serif">此卷宗尚未凝聚营造矩阵 (NO_PCG_MATRIX)</div>`;
 
             if (data.academic_proof?.coordinates) {
                 const coords = data.academic_proof.coordinates;
-                container.innerHTML += `<div class="flex justify-between items-end border-t border-cyan-700 mt-4 pt-4"><div class="flex flex-col"><span class="text-xs text-slate-300">GEO_COORD</span></div><span class="text-sm font-bold text-yellow-400">${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}</span></div>`;
+                container.innerHTML += `<div class="flex justify-between items-end border-t border-gold-800/80 mt-4 pt-4"><div class="flex flex-col"><span class="text-sm text-gold-200 font-serif">堪舆坐标 (GEO_COORD)</span></div><span class="text-sm font-bold text-jade-500">${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}</span></div>`;
             }
         }
 
         function openTopDrawer() {
-            document.getElementById('drawer-overlay').classList.add('active');
-            const drawer = document.getElementById('top-3d-drawer'); drawer.classList.add('active');
-            
+            document.getElementById('drawer-overlay').classList.add('active'); document.getElementById('top-3d-drawer').classList.add('active');
             const c = document.getElementById('top-hologram-container');
-            if(camera && renderer) {
-                camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight);
-            }
+            if(camera && renderer) { camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight); }
 
             scanState = 1; const statusEl = document.getElementById('hologram-status');
-            statusEl.innerHTML = `<span class="text-yellow-400">>>> [PHOTOGRAMMETRY AGENT] INITIATED... SCRAPING IMAGES...</span>`;
-            setTimeout(() => { scanState = 2; statusEl.innerHTML = `<span class="text-cyan-400">>>> [POINT CLOUD ENGINE] ASSEMBLING POINT CLOUD...</span>`; }, 3000);
-            setTimeout(() => { scanState = 3; statusEl.innerHTML = `<span class="text-green-400">>>> [TOPOLOGY READY] RECONSTRUCTED.</span>`; }, 6000);
+            statusEl.innerHTML = `<span class="text-imperial-400">>>> [天机灵眼] 开启... 正在聚拢大千世界之影...</span>`;
+            setTimeout(() => { scanState = 2; statusEl.innerHTML = `<span class="text-gold-400">>>> [太虚法阵] 炼化点云特征中...</span>`; }, 3000);
+            setTimeout(() => { scanState = 3; statusEl.innerHTML = `<span class="text-jade-400">>>> [营造已成] 物理拓扑重构完毕。</span>`; }, 6000);
         }
 
-        function init() { 
-            init3D(); loadDynamicCacheList(); 
-            document.getElementById('searchInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeHarvest(); }); 
-        }
-        
-        // 由于采用了 Flex 流式布局，窗口变化只需要更新 WebGL
-        window.onresize = () => {
-            if(camera && renderer && document.getElementById('top-3d-drawer').classList.contains('active')) { 
-                const c = document.getElementById('top-hologram-container'); 
-                camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight); 
-            }
-        };
+        function init() { init3D(); loadDynamicCacheList(); document.getElementById('searchInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeHarvest(); }); }
+        window.onresize = () => { if(camera && renderer && document.getElementById('top-3d-drawer').classList.contains('active')) { const c = document.getElementById('top-hologram-container'); camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth, c.clientHeight); } };
         window.onload = init;
     </script>
 </body>
