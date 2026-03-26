@@ -22,7 +22,7 @@
                         }
                     },
                     fontFamily: {
-                        sans: ['"Noto Serif SC"', '"Songti SC"', 'serif'],
+                        sans: ['"Noto Serif SC"', '"Songti SC"', 'Georgia', 'serif'],
                         mono: ['"JetBrains Mono"', 'Courier', 'monospace'],
                         seal: ['"Ma Shan Zheng"', 'cursive', 'serif'] /* 印章字体 */
                     },
@@ -38,6 +38,7 @@
     <!-- 字体与图标库 -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&family=Ma+Shan+Zheng&family=JetBrains+Mono:wght@100;300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <!-- 核心样式引擎 -->
     <style>
@@ -45,31 +46,19 @@
            1. 基础设定与宣纸肌理
         ========================================== */
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            background-color: #F2EFE9;
-            color: #2C2825;
-            font-family: 'Noto Serif SC', serif;
-            scroll-behavior: smooth;
-            overflow-x: hidden;
-            /* 隐藏系统默认鼠标，使用自定义跟随光标 */
-            cursor: none; 
+            margin: 0; padding: 0; width: 100%;
+            background-color: #F2EFE9; color: #2C2825; font-family: 'Noto Serif SC', 'Georgia', serif;
+            scroll-behavior: smooth; overflow-x: hidden; cursor: none; 
         }
 
-        /* 纯粹的宣纸底纹：噪点 + 极淡的墨晕 */
         .paper-texture {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-            z-index: -1;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1;
             background-image: 
                 url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.04"/></svg>'),
                 radial-gradient(circle at 10% 20%, rgba(163, 128, 69, 0.03) 0%, transparent 50%),
                 radial-gradient(circle at 90% 80%, rgba(140, 43, 36, 0.02) 0%, transparent 60%);
         }
 
-        /* 隐藏滚动条，保持画卷纯净感 */
         ::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
 
@@ -77,293 +66,125 @@
            2. 沉浸式加载屏 (Preloader)
         ========================================== */
         #preloader {
-            position: fixed;
-            inset: 0;
-            background-color: #F2EFE9;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            position: fixed; inset: 0; background-color: #F2EFE9; z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 1.5s ease-out, visibility 1.5s;
         }
-
         .seal-large {
-            font-family: 'Ma Shan Zheng', cursive;
-            font-size: 5rem;
-            color: #8C2B24;
-            border: 4px solid #8C2B24;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transform: rotate(-5deg);
-            opacity: 0;
+            font-family: 'Ma Shan Zheng', cursive; font-size: 5rem; color: #8C2B24; border: 4px solid #8C2B24;
+            padding: 10px 20px; border-radius: 8px; transform: rotate(-5deg); opacity: 0;
             animation: stamp-reveal 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-
         .preloader-subtitle {
-            margin-top: 40px;
-            font-size: 1rem;
-            letter-spacing: 1em;
-            color: #A38045;
-            opacity: 0;
+            margin-top: 40px; font-size: 1rem; letter-spacing: 1em; color: #A38045; opacity: 0;
             animation: fade-up-slow 2s ease forwards 0.8s;
         }
-
-        @keyframes stamp-reveal {
-            0% { transform: scale(2) rotate(-20deg); opacity: 0; }
-            100% { transform: scale(1) rotate(-5deg); opacity: 0.85; }
-        }
-        @keyframes fade-up-slow {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes stamp-reveal { 0% { transform: scale(2) rotate(-20deg); opacity: 0; } 100% { transform: scale(1) rotate(-5deg); opacity: 0.85; } }
+        @keyframes fade-up-slow { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
 
         /* ==========================================
-           3. 自定义朱砂红跟随光标
+           3. 自定义光标
         ========================================== */
         #custom-cursor {
-            position: fixed;
-            top: 0; left: 0;
-            width: 12px; height: 12px;
-            background-color: #8C2B24;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 100000;
-            mix-blend-mode: multiply;
-            transform: translate(-50%, -50%);
-            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            position: fixed; top: 0; left: 0; width: 12px; height: 12px; background-color: #8C2B24;
+            border-radius: 50%; pointer-events: none; z-index: 100000; mix-blend-mode: multiply;
+            transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s, background-color 0.3s;
         }
         #custom-cursor-follower {
-            position: fixed;
-            top: 0; left: 0;
-            width: 40px; height: 40px;
-            border: 1px solid rgba(140, 43, 36, 0.3);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 99999;
-            transform: translate(-50%, -50%);
+            position: fixed; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid rgba(140, 43, 36, 0.3);
+            border-radius: 50%; pointer-events: none; z-index: 99999; transform: translate(-50%, -50%);
             transition: transform 0.15s ease-out;
         }
-        /* 交互时的光标变形 */
-        body.hovering #custom-cursor {
-            width: 8px; height: 8px; background-color: #A38045;
-        }
-        body.hovering #custom-cursor-follower {
-            transform: translate(-50%, -50%) scale(1.5);
-            background-color: rgba(163, 128, 69, 0.1);
-            border-color: rgba(163, 128, 69, 0.5);
-        }
+        body.hovering #custom-cursor { width: 8px; height: 8px; background-color: #A38045; }
+        body.hovering #custom-cursor-follower { transform: translate(-50%, -50%) scale(1.5); background-color: rgba(163, 128, 69, 0.1); border-color: rgba(163, 128, 69, 0.5); }
 
         /* ==========================================
            4. 核心排版：古典竖排与水印
         ========================================== */
-        .vertical-text {
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            letter-spacing: 0.4em;
-        }
+        .vertical-text { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 0.4em; }
 
         .huge-watermark {
-            position: absolute;
-            font-size: 55vw;
-            font-weight: 900;
-            color: rgba(163, 128, 69, 0.03);
-            z-index: 0;
-            pointer-events: none;
-            white-space: nowrap;
-            line-height: 1;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            user-select: none;
-            /* 配合 JS 视差滚动 */
-            will-change: transform;
+            position: absolute; font-size: 55vw; font-weight: 900; color: rgba(163, 128, 69, 0.03); z-index: 0;
+            pointer-events: none; white-space: nowrap; line-height: 1; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); user-select: none; will-change: transform;
         }
+        
+        .huge-watermark.en-mode { font-size: 40vw; font-family: 'Georgia', serif; font-weight: 100; letter-spacing: -0.05em; color: rgba(163, 128, 69, 0.02);}
 
         .giant-quote {
-            font-family: 'Georgia', serif;
-            font-size: 12rem;
-            color: rgba(163, 128, 69, 0.15);
-            line-height: 0;
-            position: absolute;
-            user-select: none;
-            z-index: -1;
+            font-family: 'Georgia', serif; font-size: 12rem; color: rgba(163, 128, 69, 0.15);
+            line-height: 0; position: absolute; user-select: none; z-index: -1;
         }
 
         /* ==========================================
            5. 涌现动画引擎 (Scroll Reveal)
         ========================================== */
-        .reveal-up {
-            opacity: 0;
-            transform: translateY(100px);
-            transition: all 1.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .reveal-up { opacity: 0; transform: translateY(100px); transition: all 1.8s cubic-bezier(0.16, 1, 0.3, 1); }
         .reveal-up.active { opacity: 1; transform: translateY(0); }
-        
-        .reveal-fade {
-            opacity: 0;
-            filter: blur(15px);
-            transition: all 2.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .reveal-fade { opacity: 0; filter: blur(15px); transition: all 2.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .reveal-fade.active { opacity: 1; filter: blur(0); }
 
         /* ==========================================
            6. 拼贴画意境 (Collage Art)
         ========================================== */
-        .collage-container {
-            position: relative;
-            width: 100%;
-            height: 700px;
-        }
+        .collage-container { position: relative; width: 100%; height: 700px; }
         .collage-img {
-            position: absolute;
-            filter: sepia(0.4) grayscale(0.3) contrast(1.1);
-            box-shadow: 0 40px 80px rgba(44, 40, 37, 0.15);
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: absolute; filter: sepia(0.3) grayscale(0.2) contrast(1.1);
+            box-shadow: 0 40px 80px rgba(44, 40, 37, 0.15); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             object-fit: cover;
         }
-        .collage-img:hover {
-            transform: scale(1.03) translateY(-10px);
-            filter: sepia(0.1) grayscale(0.1) contrast(1.1);
-            z-index: 30;
-            box-shadow: 0 50px 100px rgba(140, 43, 36, 0.2);
-        }
-        .collage-bg-block {
-            position: absolute;
-            background-color: rgba(163, 128, 69, 0.08);
-            border: 1px solid rgba(163, 128, 69, 0.3);
-            z-index: 0;
-        }
+        .collage-img:hover { transform: scale(1.03) translateY(-10px); filter: sepia(0) grayscale(0) contrast(1.1); z-index: 30; box-shadow: 0 50px 100px rgba(140, 43, 36, 0.2); }
+        .collage-bg-block { position: absolute; background-color: rgba(163, 128, 69, 0.08); border: 1px solid rgba(163, 128, 69, 0.3); z-index: 0; }
 
         /* ==========================================
            7. 散点透视排版引擎 (Scatter Engine)
-           - 用于彻底取代 JSON 和表格结构
         ========================================== */
-        .scatter-container {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
-        }
-        
-        .scatter-node {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            opacity: 0;
-            transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .scatter-container { position: relative; width: 100%; min-height: 100vh; }
+        .scatter-node { position: absolute; display: flex; flex-direction: column; opacity: 0; transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .scatter-node.active { opacity: 1; }
-        
         .scatter-node:hover { transform: translateY(-8px) scale(1.02); z-index: 50; }
 
-        /* 散文批注的各部件样式 */
-        .scatter-prefix {
-            font-size: 0.9rem;
-            color: #2C2825;
-            opacity: 0.6;
-            margin-bottom: 4px;
-            letter-spacing: 0.2em;
-        }
-        .scatter-label {
-            font-size: 1.2rem;
-            color: #A38045;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            border-bottom: 1px dashed rgba(163, 128, 69, 0.5);
-            padding-bottom: 4px;
-            display: inline-block;
-        }
-        .scatter-value {
-            font-size: 3.5rem;
-            color: #8C2B24;
-            font-weight: 900;
-            line-height: 1;
-            margin: 10px 0;
-            text-shadow: 2px 4px 15px rgba(140, 43, 36, 0.08);
-        }
-        .scatter-seal {
-            font-family: 'Ma Shan Zheng', cursive;
-            color: #8C2B24;
-            border: 1px solid #8C2B24;
-            padding: 2px 8px;
-            border-radius: 2px;
-            transform: rotate(-12deg);
-            display: inline-block;
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-left: 10px;
-        }
+        .scatter-prefix { font-size: 0.9rem; color: #2C2825; opacity: 0.6; margin-bottom: 4px; letter-spacing: 0.2em; font-family: 'Noto Serif SC', 'Georgia', serif;}
+        .scatter-label { font-size: 1.2rem; color: #A38045; font-weight: 600; letter-spacing: 0.1em; border-bottom: 1px dashed rgba(163, 128, 69, 0.5); padding-bottom: 4px; display: inline-block; font-family: 'Noto Serif SC', 'Georgia', serif;}
+        .scatter-value { font-size: 3.5rem; color: #8C2B24; font-weight: 900; line-height: 1; margin: 10px 0; text-shadow: 2px 4px 15px rgba(140, 43, 36, 0.08); font-family: 'Noto Serif SC', 'Georgia', serif;}
+        .scatter-seal { font-family: 'Ma Shan Zheng', cursive; color: #8C2B24; border: 1px solid #8C2B24; padding: 2px 8px; border-radius: 2px; transform: rotate(-12deg); display: inline-block; font-size: 0.8rem; opacity: 0.7; margin-left: 10px; }
 
         /* ==========================================
-           8. 交互组件：极简输入框与右侧导航
+           8. 交互组件
         ========================================== */
         .ancient-input {
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid rgba(163, 128, 69, 0.4);
-            padding: 16px 0;
-            color: #2C2825;
-            width: 100%;
-            font-size: 1.5rem;
-            text-align: center;
-            letter-spacing: 0.3em;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            background: transparent; border: none; border-bottom: 1px solid rgba(163, 128, 69, 0.4); padding: 16px 0; color: #2C2825;
+            width: 100%; font-size: 1.5rem; text-align: center; letter-spacing: 0.2em; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .ancient-input:focus {
-            outline: none;
-            border-bottom-color: #8C2B24;
-            box-shadow: 0 20px 20px -20px rgba(140, 43, 36, 0.3);
-        }
+        .ancient-input:focus { outline: none; border-bottom-color: #8C2B24; box-shadow: 0 20px 20px -20px rgba(140, 43, 36, 0.3); }
         .ancient-input::placeholder { color: rgba(163, 128, 69, 0.4); font-weight: 300; }
 
         .tag-cloud-btn {
-            padding: 8px 24px;
-            border: 1px solid rgba(216, 209, 196, 0.8);
-            border-radius: 30px;
-            font-size: 0.9rem;
-            letter-spacing: 0.1em;
-            color: #2C2825;
-            background: transparent;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 8px 24px; border: 1px solid rgba(216, 209, 196, 0.8); border-radius: 30px; font-size: 0.9rem; letter-spacing: 0.1em;
+            color: #2C2825; background: transparent; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .tag-cloud-btn:hover {
-            border-color: #8C2B24; color: #8C2B24;
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(140, 43, 36, 0.08);
-        }
+        .tag-cloud-btn:hover { border-color: #8C2B24; color: #8C2B24; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(140, 43, 36, 0.08); }
 
-        .floating-tools {
-            position: fixed; right: 40px; top: 50%; transform: translateY(-50%);
-            display: flex; flex-direction: column; gap: 16px; z-index: 1000;
-        }
+        .floating-tools { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 16px; z-index: 1000; }
         .tool-btn {
-            width: 48px; height: 48px; border-radius: 50%;
-            border: 1px solid rgba(163, 128, 69, 0.3);
-            background: rgba(242, 239, 233, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: center;
-            color: #A38045; font-size: 16px; text-decoration: none;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(163, 128, 69, 0.3); background: rgba(242, 239, 233, 0.8);
+            backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; color: #A38045; font-size: 16px; text-decoration: none; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .tool-btn:hover {
-            background: #8C2B24; border-color: #8C2B24; color: #F2EFE9;
-            transform: scale(1.1) rotate(-5deg);
-            box-shadow: 0 10px 30px rgba(140, 43, 36, 0.2);
-        }
+        .tool-btn:hover { background: #8C2B24; border-color: #8C2B24; color: #F2EFE9; transform: scale(1.1) rotate(-5deg); box-shadow: 0 10px 30px rgba(140, 43, 36, 0.2); }
+        
+        .cursor-blink { display: inline-block; width: 2px; height: 1em; background: #8B2E25; animation: blink 1s infinite; vertical-align: middle; margin-left: 6px;}
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     </style>
 </head>
 <body class="antialiased selection:bg-yihe-red selection:text-white">
 
-    <!-- 🌟 全局宣纸底纹层 -->
     <div class="paper-texture"></div>
 
-    <!-- 🌟 沉浸式加载屏 -->
     <div id="preloader">
         <div class="seal-large">造办处</div>
         <div class="preloader-subtitle" id="operator-name">王浦硕 · 掌案</div>
     </div>
 
-    <!-- 🌟 自定义跟随光标 -->
     <div id="custom-cursor"></div>
     <div id="custom-cursor-follower"></div>
 
@@ -379,21 +200,18 @@
     </div>
 
     <!-- ==========================================
-         卷首：极简寻迹区 (Hero Section)
-         完全居中，大面积留白
+         卷首：极简寻迹区
     ========================================== -->
     <section id="section-hero" class="relative w-full min-h-screen flex flex-col items-center justify-center pt-20 pb-32">
-        
         <div class="w-full max-w-4xl flex flex-col items-center z-10 reveal-up active">
-            
-            <div class="font-seal text-yihe-red border-2 border-yihe-red px-4 py-2 transform rotate-[-8deg] mb-16 opacity-80 text-lg hover-trigger">
+            <div id="hero-seal" class="font-seal text-yihe-red border-2 border-yihe-red px-4 py-2 transform rotate-[-8deg] mb-16 opacity-80 text-lg hover-trigger">
                 数字营造
             </div>
 
-            <h1 class="text-5xl md:text-[5rem] font-black text-yihe-ink tracking-[0.4em] mb-8 text-center ml-8 drop-shadow-sm">
+            <h1 id="hero-title" class="text-5xl md:text-[5rem] font-black text-yihe-ink tracking-[0.4em] mb-8 text-center ml-8 drop-shadow-sm">
                 天工画卷
             </h1>
-            <p class="text-xs text-yihe-ink/40 tracking-[0.8em] font-light mb-24 uppercase font-mono border-b border-yihe-border pb-4 px-12">
+            <p id="hero-subtitle" class="text-xs text-yihe-ink/40 tracking-[0.8em] font-light mb-24 uppercase font-mono border-b border-yihe-border pb-4 px-12">
                 Palace-Digi Adaptive Engine
             </p>
             
@@ -405,19 +223,17 @@
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-                <div id="search-status" class="absolute left-1/2 -bottom-12 transform -translate-x-1/2 text-xs text-yihe-gold tracking-[0.5em] opacity-0 transition-opacity">
+                <div id="search-status" class="absolute left-1/2 -bottom-12 transform -translate-x-1/2 text-xs text-yihe-gold tracking-[0.5em] opacity-0 transition-opacity whitespace-nowrap">
                     推演阵法中...
                 </div>
             </div>
 
-            <!-- 云端散落名录 -->
             <div class="w-full flex flex-col items-center">
                 <div class="flex items-center gap-6 mb-12 text-yihe-ink/40">
                     <div class="w-24 h-px bg-yihe-border"></div>
-                    <span class="text-xs tracking-[0.8em] font-bold ml-2">已录卷宗</span>
+                    <span id="label-cloud-title" class="text-xs tracking-[0.8em] font-bold ml-2">已录卷宗</span>
                     <div class="w-24 h-px bg-yihe-border"></div>
                 </div>
-                
                 <div id="file-list" class="flex flex-wrap justify-center gap-6 max-w-4xl px-4">
                     <div class="text-sm text-yihe-gold/50 tracking-[0.3em] animate-pulse font-serif">翻阅藏经阁中...</div>
                 </div>
@@ -426,75 +242,68 @@
     </section>
 
     <!-- ==========================================
-         画卷长流 (唤醒数据后向下解锁)
+         画卷长流
     ========================================== -->
     <div id="narrative-flow" class="hidden flex flex-col w-full relative border-t border-yihe-border/50">
 
-        <!-- 🌊 篇章一：文献溯源 (拼贴画册排版) -->
+        <!-- 🌊 篇章一：文献溯源 -->
         <section id="chapter-history" class="relative w-full min-h-[120vh] flex items-center justify-center py-32 overflow-hidden">
-            
-            <!-- 巨大的滚动视差水印 -->
             <div id="bg-watermark-1" class="huge-watermark parallax-text" data-speed="-0.1">史</div>
 
             <div class="max-w-[90rem] px-8 mx-auto w-full flex flex-col md:flex-row gap-20 relative z-10 items-center">
                 
-                <!-- 左侧：竖排标题与错落的古画拼贴 -->
+                <!-- 左侧：竖排标题与拼贴 (真实图片) -->
                 <div class="w-full md:w-5/12 relative min-h-[700px] flex items-center justify-center reveal-up">
-                    
                     <div class="absolute left-0 top-0 flex flex-col items-center z-40">
-                        <span class="text-[10px] text-yihe-gold tracking-[0.8em] font-mono uppercase mb-8 vertical-text">Chapter I</span>
-                        <h2 class="text-4xl md:text-5xl font-black text-yihe-ink tracking-[0.3em] vertical-text drop-shadow-md">文献溯源</h2>
+                        <span class="text-[10px] text-yihe-gold tracking-[0.8em] font-mono uppercase mb-8 vertical-text" id="chap1-num">Chapter I</span>
+                        <h2 class="text-4xl md:text-5xl font-black text-yihe-ink tracking-[0.3em] vertical-text drop-shadow-md" id="chap1-title">文献溯源</h2>
                         <div class="w-px h-24 bg-yihe-red my-10"></div>
-                        <h3 id="target-name-1" class="text-2xl font-bold text-yihe-red tracking-widest vertical-text">卷宗名</h3>
+                        <h3 id="target-name-1" class="text-2xl font-bold text-yihe-red tracking-widest vertical-text" style="line-height: 1.5;">卷宗名</h3>
                     </div>
                     
                     <div class="collage-container w-full h-full ml-16">
                         <div class="collage-bg-block w-64 h-80 absolute top-10 left-10"></div>
-                        <img id="collage-img-1" src="https://images.unsplash.com/photo-1542856391-010fb87dcfed?q=80&w=800&auto=format&fit=crop" class="collage-img w-64 h-96 top-20 left-20 z-10 hover-trigger" alt="古建意象">
+                        <img id="collage-img-1" src="https://images.unsplash.com/photo-1542856391-010fb87dcfed?q=80&w=800&auto=format&fit=crop" class="collage-img w-64 h-96 top-20 left-20 z-10 hover-trigger" alt="古建图">
                         <img id="collage-img-2" src="https://images.unsplash.com/photo-1583205739958-692b2d6cc5fb?q=80&w=800&auto=format&fit=crop" class="collage-img w-72 h-64 bottom-20 right-10 z-20 hover-trigger" alt="古建局部">
                     </div>
                 </div>
 
-                <!-- 右侧：大段散文留白排版 -->
+                <!-- 右侧：散文留白 -->
                 <div class="w-full md:w-7/12 relative reveal-fade">
                     <div class="giant-quote -left-16 -top-16">“</div>
                     <div id="content-display" class="text-lg md:text-[21px] text-yihe-ink/80 leading-[2.8] text-justify font-light z-10 relative pt-12 pl-8 pb-10">
-                        <!-- 文献正文注入区 -->
+                        <!-- 文献正文 -->
                     </div>
                     <div class="giant-quote right-16 bottom-[-80px] transform rotate-180 opacity-5">”</div>
                 </div>
             </div>
         </section>
 
-        <!-- 🌊 篇章二：营造法式 (顶级的散点透视排版，拒绝表格) -->
+        <!-- 🌊 篇章二：营造法式 -->
         <section id="chapter-dna" class="relative w-full min-h-[150vh] flex flex-col items-center py-40 bg-[#EFECE5] border-t border-yihe-border/50 overflow-hidden">
-            
             <div id="bg-watermark-2" class="huge-watermark parallax-text" data-speed="0.15">构</div>
 
-            <!-- 顶部引言 -->
             <div class="max-w-4xl px-8 w-full flex flex-col items-center relative z-20 reveal-up mb-32">
-                <span class="text-[10px] text-yihe-gold tracking-[0.8em] font-mono uppercase mb-6">Chapter II</span>
-                <h2 class="text-4xl md:text-5xl font-black text-yihe-ink tracking-[0.4em] mb-10 text-center ml-4 drop-shadow-sm">营造推演</h2>
-                <p class="text-lg text-yihe-ink/60 tracking-[0.2em] text-center leading-[2.4] max-w-2xl font-light">
+                <span class="text-[10px] text-yihe-gold tracking-[0.8em] font-mono uppercase mb-6" id="chap2-num">Chapter II</span>
+                <h2 class="text-4xl md:text-5xl font-black text-yihe-ink tracking-[0.4em] mb-10 text-center ml-4 drop-shadow-sm" id="chap2-title">营造推演</h2>
+                <p class="text-lg text-yihe-ink/60 tracking-[0.2em] text-center leading-[2.4] max-w-2xl font-light" id="chap2-desc">
                     弃绝枯燥之格表，以大模型之算力重塑建筑之骨架。<br>以下所列，皆为提炼之法式尺度，错落如漫天繁星。
                 </p>
                 <i class="fas fa-chevron-down text-yihe-red/40 mt-16 text-2xl animate-bounce"></i>
             </div>
             
-            <!-- 核心：散点参数容器 (JS 动态注入绝对定位的 HTML) -->
             <div id="scatter-container" class="scatter-container max-w-[90rem] w-full mx-auto relative z-10">
-                <!-- 散点排版数据将注入于此 -->
+                <!-- 动态数据 -->
             </div>
-
         </section>
 
-        <!-- 🌊 篇章三：堪舆落款 (全屏卫星图叠加) -->
+        <!-- 🌊 篇章三：堪舆落款 -->
         <section id="chapter-geo" class="relative w-full h-[90vh] flex flex-col items-center justify-center overflow-hidden bg-[#1E1B18]">
             <img id="satellite-map" src="" class="absolute inset-0 w-full h-full object-cover opacity-20 filter grayscale sepia-[0.3] hue-rotate-[10deg] scale-105 transition-all duration-[3000ms]" alt="堪舆底图">
             <div class="absolute inset-0 bg-gradient-to-t from-[#1A1816] via-transparent to-[#1A1816]"></div>
 
             <div class="z-10 flex flex-col items-center reveal-up">
-                <h2 class="vertical-text text-3xl md:text-4xl font-light tracking-[0.5em] mb-16 text-yihe-gold/80">堪舆落位</h2>
+                <h2 class="vertical-text text-3xl md:text-4xl font-light tracking-[0.5em] mb-16 text-yihe-gold/80" id="chap3-title">堪舆落位</h2>
                 
                 <div class="flex items-center gap-10 mb-20">
                     <div class="w-32 h-px bg-yihe-gold/30"></div>
@@ -506,40 +315,70 @@
                     -- . ---- , -- . ----
                 </div>
                 
-                <div class="mt-32 font-seal text-3xl tracking-[0.4em] text-yihe-red border-4 border-yihe-red px-6 py-3 transform rotate-[-5deg] opacity-80 hover-trigger cursor-pointer hover:bg-yihe-red hover:text-white transition-colors duration-500">
+                <div id="chap3-seal" class="mt-32 font-seal text-3xl tracking-[0.4em] text-yihe-red border-4 border-yihe-red px-6 py-3 transform rotate-[-5deg] opacity-80 hover-trigger cursor-pointer hover:bg-yihe-red hover:text-white transition-colors duration-500">
                     卷宗封印
                 </div>
             </div>
         </section>
-
     </div>
 
     <!-- ==========================================
-         🧠 核心 JavaScript 逻辑引擎
+         🧠 核心 JavaScript 逻辑
     ========================================== -->
     <script>
-        /* ----------------------------------------------------
-           模块 1：自定义光标交互体验
-        ---------------------------------------------------- */
+        // --- 字典：双语引擎 ---
+        const i18n = {
+            zh: {
+                searchPlaceholder: "轻叩键端，唤醒云端古建卷宗...",
+                searchStatus: "推演阵法中...",
+                cloudTitle: "已录卷宗",
+                chap1Num: "Chapter I",
+                chap1Title: "文献溯源",
+                chap2Num: "Chapter II",
+                chap2Title: "营造推演",
+                chap2Desc: "弃绝枯燥之格表，以大模型之算力重塑建筑之骨架。<br>以下所列，皆为提炼之法式尺度，错落如漫天繁星。",
+                chap3Title: "堪舆落位",
+                chap3Seal: "卷宗封印",
+                noData: "空无一物",
+                error: "结界阻隔，无法获取云端卷宗。",
+                fetchingImg: "寻图...",
+                scatterPrefixes: ["度量其", "勘定为", "取制于", "视其", "形拟"],
+                scatterComplements: ["，端庄严谨。", "，尽显匠心。", "，合乎《法式》。", "，气势恢宏。", "，巧夺天工。"],
+                scatterNarrativePrefix: "观夫",
+                scatterNarrativeMiddle: "之营造法式，蕴含古人规矩方圆之理。经太虚引擎剥离其物理拓扑，建筑之骨架跃然纸上：<br><br>察其规制，",
+                scatterNarrativeSuffix: "此等尺度交相辉映，严丝合缝，皆合乎《营造法式》之大美，匠心独运。"
+            },
+            en: {
+                searchPlaceholder: "Awaken ancient archives via the cloud...",
+                searchStatus: "Inferring...",
+                cloudTitle: "Cloud Archives",
+                chap1Num: "Chapter I",
+                chap1Title: "Origins",
+                chap2Num: "Chapter II",
+                chap2Title: "Inference",
+                chap2Desc: "Discarding rigid tables, we use AI to reconstruct the architectural skeleton.<br>The metrics extracted below scatter like stars.",
+                chap3Title: "Geolocation",
+                chap3Seal: "Sealed",
+                noData: "Empty Void",
+                error: "Connection lost. Cannot retrieve archives.",
+                fetchingImg: "Loading...",
+                scatterPrefixes: ["Measuring its", "Determined as", "Modeled after", "Observing its", "Simulating"],
+                scatterComplements: [", solemn and strict.", ", showing great craftsmanship.", ", adhering to standard.", ", magnificent in scale.", ", a masterpiece of nature."],
+                scatterNarrativePrefix: "Behold the architectural style of ",
+                scatterNarrativeMiddle: ", embodying the ancient philosophy of harmony. Through our AI engine, its physical topology is revealed:<br><br>Observing its rules, ",
+                scatterNarrativeSuffix: "These dimensions complement each other perfectly, reflecting the profound beauty of ancient architecture."
+            }
+        };
+
+        let currentLang = 'zh'; 
+
+        // 光标系统
         const cursor = document.getElementById('custom-cursor');
         const follower = document.getElementById('custom-cursor-follower');
         let mouseX = 0, mouseY = 0, followerX = 0, followerY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX; mouseY = e.clientY;
-            cursor.style.left = `${mouseX}px`; cursor.style.top = `${mouseY}px`;
-        });
-
-        function animateCursor() {
-            // 平滑跟随算法
-            followerX += (mouseX - followerX) * 0.15;
-            followerY += (mouseY - followerY) * 0.15;
-            follower.style.left = `${followerX}px`; follower.style.top = `${followerY}px`;
-            requestAnimationFrame(animateCursor);
-        }
+        document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; cursor.style.left = `${mouseX}px`; cursor.style.top = `${mouseY}px`; });
+        function animateCursor() { followerX += (mouseX - followerX) * 0.15; followerY += (mouseY - followerY) * 0.15; follower.style.left = `${followerX}px`; follower.style.top = `${followerY}px`; requestAnimationFrame(animateCursor); }
         animateCursor();
-
-        // 为可交互元素添加 hover 状态
         function bindCursorEvents() {
             document.querySelectorAll('a, button, input, .hover-trigger, .list-item-pro, .scatter-node, .collage-img').forEach(el => {
                 el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
@@ -547,211 +386,137 @@
             });
         }
 
-        /* ----------------------------------------------------
-           模块 2：沉浸式加载与滚动视差
-        ---------------------------------------------------- */
+        // 加载屏 & 视差 & 观察器
         window.addEventListener('load', () => {
             setTimeout(() => {
-                document.getElementById('preloader').style.opacity = '0';
-                document.getElementById('preloader').style.visibility = 'hidden';
+                document.getElementById('preloader').style.opacity = '0'; document.getElementById('preloader').style.visibility = 'hidden';
                 bindCursorEvents();
-            }, 3000); // 展示 3 秒的造办处印章
+            }, 3000);
         });
-
-        // 视差滚动监听
         window.addEventListener('scroll', () => {
             const scrolled = window.scrollY;
-            document.querySelectorAll('.parallax-text').forEach(el => {
-                const speed = el.getAttribute('data-speed') || 0.1;
-                // 仅纵向位移，保持居中
-                el.style.transform = `translate(-50%, calc(-50% + ${scrolled * speed}px))`;
-            });
+            document.querySelectorAll('.parallax-text').forEach(el => { const speed = el.getAttribute('data-speed') || 0.1; el.style.transform = `translate(-50%, calc(-50% + ${scrolled * speed}px))`; });
         });
-
-        // 元素进入视口触发动画
         const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    // 为散落的数据节点添加随机延迟，形成错落浮现的视觉美感
-                    if(entry.target.classList.contains('scatter-node')) {
-                        entry.target.style.transitionDelay = `${Math.random() * 0.6}s`;
-                    }
-                }
-            });
+            entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('active'); if(entry.target.classList.contains('scatter-node')) entry.target.style.transitionDelay = `${Math.random() * 0.6}s`; } });
         }, observerOptions);
-
-        function observeNewElements() {
-            document.querySelectorAll('.reveal-up, .reveal-fade, .reveal-left, .scatter-node').forEach(el => observer.observe(el));
-        }
+        function observeNewElements() { document.querySelectorAll('.reveal-up, .reveal-fade, .reveal-left, .scatter-node').forEach(el => observer.observe(el)); }
         document.addEventListener("DOMContentLoaded", observeNewElements);
 
-        /* ----------------------------------------------------
-           模块 3：核心加密解密 (AES-256-GCM)
-           保证数据安全的底层支持
-        ---------------------------------------------------- */
+        // 核心加密
         const AES_SECRET_KEY = "PalaceDigiSuperSecretKey32Bytes!";
         async function decryptPayload(base64Ciphertext) {
             try {
-                const binaryString = atob(base64Ciphertext); 
-                const bytes = new Uint8Array(binaryString.length);
+                const binaryString = atob(base64Ciphertext); const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
                 const iv = bytes.slice(0, 12); const data = bytes.slice(12); const enc = new TextEncoder();
                 const keyMaterial = await window.crypto.subtle.importKey("raw", enc.encode(AES_SECRET_KEY), "AES-GCM", false, ["decrypt"]);
                 const decryptedBuffer = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, keyMaterial, data);
                 return JSON.parse(new TextDecoder().decode(decryptedBuffer));
-            } catch (e) { 
-                console.error("解密异常:", e);
-                return { name: { zh: "真迹损毁，不可名状" } }; 
-            }
+            } catch (e) { return { name: { zh: "真迹损毁", en: "Data Corrupted" } }; }
         }
 
-        /* ----------------------------------------------------
-           模块 4：全局配置与云端通信 (Bmob / Cpolar)
-        ---------------------------------------------------- */
-        let currentLang = 'zh'; 
+        const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2"; const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
+        const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "") ? "http://127.0.0.1:5000" : "https://3a480289.r6.cpolar.top";
+        
+        let currentTimer = null; let currentData = null; let globalCloudNodes = [];
+
+        // --- 动态获取真实图像 (Wikipedia API) ---
+        async function fetchWikiImage(keyword) {
+            try {
+                // 仅搜索中文维基，因为是古建名
+                const res = await fetch(`https://zh.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${encodeURIComponent(keyword)}&origin=*`);
+                const data = await res.json();
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                if (pageId !== "-1" && pages[pageId].original) {
+                    return pages[pageId].original.source;
+                }
+            } catch(e) { console.warn("Wiki Image Fetch failed:", e); }
+            return null;
+        }
+
+        // 双语切换
         function toggleLang(lang) {
             currentLang = lang;
             document.getElementById('btn-zh').style.background = lang === 'zh' ? '#8C2B24' : 'rgba(245, 244, 240, 0.8)';
             document.getElementById('btn-zh').style.color = lang === 'zh' ? '#F2EFE9' : '#A38045';
             document.getElementById('btn-en').style.background = lang === 'en' ? '#8C2B24' : 'rgba(245, 244, 240, 0.8)';
             document.getElementById('btn-en').style.color = lang === 'en' ? '#F2EFE9' : '#A38045';
-            if (currentData) renderUI(currentData, true); // 不带打字机动画重新渲染
+            
+            // 更新静态 UI 文本
+            document.getElementById('searchInput').placeholder = i18n[lang].searchPlaceholder;
+            document.getElementById('label-cloud-title').innerText = i18n[lang].cloudTitle;
+            document.getElementById('chap1-num').innerText = i18n[lang].chap1Num;
+            document.getElementById('chap1-title').innerText = i18n[lang].chap1Title;
+            document.getElementById('chap2-num').innerText = i18n[lang].chap2Num;
+            document.getElementById('chap2-title').innerText = i18n[lang].chap2Title;
+            document.getElementById('chap2-desc').innerHTML = i18n[lang].chap2Desc;
+            document.getElementById('chap3-title').innerText = i18n[lang].chap3Title;
+            document.getElementById('chap3-seal').innerText = i18n[lang].chap3Seal;
+
+            // 切换水印字体样式
+            const watermarks = document.querySelectorAll('.huge-watermark');
+            watermarks.forEach(w => lang === 'en' ? w.classList.add('en-mode') : w.classList.remove('en-mode'));
+
+            // 如果有数据，重新渲染内容
+            if (currentData) renderUI(currentData, true);
         }
 
-        const BMOB_APP_ID = "d6f83c6438f18df723076957e3c280c2"; 
-        const BMOB_REST_KEY = "c6aa64c596088d8d724243a98d53fcd6";
-        const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "") 
-            ? "http://127.0.0.1:5000" : "https://3a480289.r6.cpolar.top";
-        
-        let currentTimer = null; 
-        let currentData = null; 
-        let globalCloudNodes = [];
-
-        // 初始化拉取云端玉简名录
+        // 拉取列表
         async function loadDynamicCacheList() {
             const list = document.getElementById('file-list');
-            const syncStatus = document.getElementById('sync-status');
-            
-            list.innerHTML = `<div class="text-base text-yihe-gold/60 py-6 tracking-widest font-serif animate-pulse">神识连接云端藏经阁...</div>`; 
+            list.innerHTML = `<div class="text-sm text-yihe-gold/50 py-4 tracking-widest font-serif animate-pulse">翻阅藏经阁中...</div>`; 
             try {
-                const res = await fetch("https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=30", {
-                    method: 'GET', headers: { "X-Bmob-Application-Id": BMOB_APP_ID, "X-Bmob-REST-API-Key": BMOB_REST_KEY, "Content-Type": "application/json" }
-                });
-                if (!res.ok) throw new Error("Bmob API Error");
+                const res = await fetch("https://api.bmobcloud.com/1/classes/BuildingArchive?order=-updatedAt&limit=30", { method: 'GET', headers: { "X-Bmob-Application-Id": BMOB_APP_ID, "X-Bmob-REST-API-Key": BMOB_REST_KEY, "Content-Type": "application/json" } });
+                if (!res.ok) throw new Error("API Error");
                 const data = await res.json();
-                
                 globalCloudNodes = [];
                 for (let item of data.results || []) {
-                    if (item.payload_encrypted) {
-                        item.payload = await decryptPayload(item.payload_encrypted);
-                    } else if (!item.payload && !item.payload_encrypted) {
-                        continue; 
-                    }
+                    if (item.payload_encrypted) item.payload = await decryptPayload(item.payload_encrypted);
+                    else if (!item.payload && !item.payload_encrypted) continue; 
                     globalCloudNodes.push(item);
                 }
-                
-                if(syncStatus) {
-                    syncStatus.innerText = "阵法已连结";
-                    syncStatus.classList.replace('text-yihe-gold', 'text-yihe-red');
-                }
                 renderNodeList(globalCloudNodes);
-            } catch (error) {
-                if(syncStatus) syncStatus.innerText = "灵脉断绝";
-                list.innerHTML = `<div class="text-sm text-yihe-red py-6">结界阻隔，无法获取云端卷宗。</div>`;
-            }
+            } catch (error) { list.innerHTML = `<div class="text-sm text-yihe-red py-4">${i18n[currentLang].error}</div>`; }
         }
 
-        // 渲染散落的横向名录 (Tag Cloud 样式)
         function renderNodeList(nodes) {
-            const list = document.getElementById('file-list'); 
-            list.innerHTML = ""; 
-            if (nodes.length === 0) { list.innerHTML = `<div class="text-sm text-yihe-ink/40 py-6">空无一物</div>`; return; }
-            
+            const list = document.getElementById('file-list'); list.innerHTML = ""; 
+            if (nodes.length === 0) { list.innerHTML = `<div class="text-sm text-yihe-ink/40 py-4">${i18n[currentLang].noData}</div>`; return; }
             nodes.forEach((item) => {
                 const b = item.payload; if(!b) return; 
-                
                 const btn = document.createElement('button');
-                btn.className = "tag-cloud-btn hover-trigger font-serif shadow-sm bg-white/40";
-                
-                const nameDisp = b.name ? (b.name[currentLang] || b.name.zh) : "佚名";
-                btn.innerHTML = `<span>${nameDisp}</span>`;
-                
-                // 核心交互：点击解开下方长卷
+                btn.className = "px-6 py-2 border border-yihe-border rounded-full text-yihe-ink/70 text-sm tracking-[0.2em] hover:border-yihe-red hover:text-yihe-red transition-all shadow-sm bg-white/30 hover-trigger font-serif";
+                btn.innerText = b.name ? (b.name[currentLang] || b.name.zh || "佚名") : "佚名";
                 btn.onclick = () => { 
                     renderUI(b, false); 
-                    
-                    const flow = document.getElementById('narrative-flow');
-                    flow.classList.remove('hidden');
-                    
-                    // 显示右侧锚点导航
+                    document.getElementById('narrative-flow').classList.remove('hidden');
                     document.getElementById('nav-history').classList.remove('hidden');
                     document.getElementById('nav-dna').classList.remove('hidden');
                     document.getElementById('nav-geo').classList.remove('hidden');
-                    
-                    // 平滑滚动至文献区，留出 100ms 让 DOM 渲染完毕
-                    setTimeout(() => { 
-                        observeNewElements(); 
-                        document.getElementById('chapter-history').scrollIntoView({ behavior: 'smooth' }); 
-                    }, 100);
+                    setTimeout(() => { observeNewElements(); document.getElementById('chapter-history').scrollIntoView({ behavior: 'smooth' }); }, 100);
                 };
                 list.appendChild(btn);
             });
-            
-            // 重新绑定自定义光标的 hover 事件
             bindCursorEvents();
         }
 
-        // 触发 AI 收割引擎
         function executeHarvest() {
-            const searchInput = document.getElementById('searchInput'); 
-            const target = searchInput.value.trim(); 
-            if (!target) return;
-            
-            const btn = document.getElementById('searchBtn'); 
-            const status = document.getElementById('search-status');
-            
-            // UI 锁定状态
-            btn.innerHTML = `<i class="fas fa-dharmachakra fa-spin"></i>`; 
-            btn.style.pointerEvents = "none";
-            status.style.opacity = 1; 
-            status.innerText = `大模型正剥离 '${target}' 物理维度...`;
+            const searchInput = document.getElementById('searchInput'); const target = searchInput.value.trim(); if (!target) return;
+            const btn = document.getElementById('searchBtn'); const status = document.getElementById('search-status');
+            btn.innerHTML = `<i class="fas fa-dharmachakra fa-spin"></i>`; btn.style.pointerEvents = "none";
+            status.style.opacity = 1; status.innerText = i18n[currentLang].searchStatus;
 
-            fetch(`${API_BASE}/api/trigger_crawl`, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', 'Bypass-Tunnel-Reminder': 'true' }, 
-                body: JSON.stringify({ target: target, force: true }) 
-            })
+            fetch(`${API_BASE}/api/trigger_crawl`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', 'Bypass-Tunnel-Reminder': 'true' }, body: JSON.stringify({ target: target, force: true }) })
             .then(res => res.json())
-            .then(data => {
-                if(data.status !== "ERROR") {
-                    status.innerText = `卷宗已封印入库，重塑法式完成。`; 
-                    status.style.color = '#8C2B24';
-                    loadDynamicCacheList(); // 刷新名录
-                } else {
-                    throw new Error("Backend Error");
-                }
-            })
-            .catch(err => {
-                status.innerHTML = `⚠️ 神谕被界外结界拦截，<a href="${API_BASE}/api/cache_list" target="_blank" class="underline font-bold text-yihe-red hover:text-yihe-ink cursor-pointer">请击此打通 Cpolar 隧道</a>`;
-                status.style.color = '#2C2825';
-            })
-            .finally(() => {
-                // 恢复按钮状态
-                btn.innerHTML = `<i class="fas fa-search"></i>`; 
-                btn.style.pointerEvents = "auto"; 
-                searchInput.value = '';
-                
-                // 5 秒后隐藏提示语
-                setTimeout(() => status.style.opacity = 0, 5000);
-            });
+            .then(data => { if(data.status !== "ERROR") { status.innerText = "Success."; status.style.color = '#8C2B24'; loadDynamicCacheList(); } else throw new Error(); })
+            .catch(err => { status.innerHTML = `Error. <a href="${API_BASE}/api/cache_list" target="_blank" class="underline font-bold text-yihe-red">Fix Tunnel</a>`; })
+            .finally(() => { btn.innerHTML = `<i class="fas fa-search"></i>`; btn.style.pointerEvents = "auto"; searchInput.value = ''; setTimeout(() => status.style.opacity = 0, 5000); });
         }
 
-        /* ----------------------------------------------------
-           模块 5：散点透视排版引擎 (Scatter Rendering)
-           拒绝任何表格结构，将参数变成艺术画布
-        ---------------------------------------------------- */
+        // 散文生成
         function updateScatteredFlow(data) {
             const container = document.getElementById('scatter-container');
             container.innerHTML = '';
@@ -761,130 +526,130 @@
             let allItems = [...dnaList, ...techCards];
 
             if (allItems.length === 0) {
-                container.innerHTML = `<div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-yihe-ink/30 tracking-[0.5em] text-2xl font-light font-serif">岁月斑驳，未能解析确切之法式矩阵</div>`;
+                container.innerHTML = `<div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-yihe-ink/30 tracking-[0.5em] text-2xl font-light font-serif">${currentLang === 'zh' ? '无确切法式矩阵' : 'No Matrix Found'}</div>`;
                 return;
             }
 
-            // 古文词件库：为枯燥的参数增加人文学术感
-            const verbs = ["度量其", "勘定为", "取制于", "视其", "形拟"];
-            const complements = ["，端庄严谨。", "，尽显匠心。", "，合乎《法式》。", "，气势恢宏。", "，巧夺天工。"];
+            const dict = i18n[currentLang];
+            const name = data.name ? (data.name[currentLang] || data.name.zh || "此殿宇") : "此殿宇";
             
-            // 核心算法：在巨大画卷上生成不重叠的错落坐标
-            // 将整个容器划分为左中右三个不规则带，避免完全对齐
-            allItems.forEach((item, index) => {
-                const label = item.label_zh || item.param_name || item.label?.zh || item.label || "营造属性";
-                const value = item.value?.zh || item.value || "---";
-                
-                const verb = verbs[index % verbs.length];
-                const comp = complements[(index + 2) % complements.length];
+            let html = `<div class="w-full text-center max-w-3xl mx-auto mb-20 text-lg leading-loose font-light opacity-80 reveal-up">
+                <span class="font-bold text-xl mx-1">${dict.scatterNarrativePrefix} ${name}</span> ${dict.scatterNarrativeMiddle}
+            </div>`;
+            
+            container.innerHTML = html;
 
-                // 左右随机错落 (限制在 10% ~ 80% 的安全区)
+            allItems.forEach((item, index) => {
+                const label = currentLang === 'en' ? (item.param_name || item.label?.en || item.label_zh) : (item.label_zh || item.param_name || item.label?.zh);
+                const value = currentLang === 'en' ? (item.value?.en || item.value) : (item.value?.zh || item.value);
+                
+                const verb = dict.scatterPrefixes[index % dict.scatterPrefixes.length];
+                const comp = dict.scatterComplements[(index + 2) % dict.scatterComplements.length];
+                
                 const isLeftward = index % 2 === 0;
                 const leftPos = isLeftward ? (10 + Math.random() * 25) : (50 + Math.random() * 30);
-                
-                // Y 轴逐层递进，保证向下滚动不断有内容涌现
-                // 每项占据大约 15vh 的垂直空间基础
-                const topPos = (index * (120 / allItems.length)) + (Math.random() * 15);
+                const topPos = (index * (120 / allItems.length)) + (Math.random() * 15) + 20;
 
                 const div = document.createElement('div');
                 div.className = "scatter-node hover-trigger";
                 div.style.left = `${leftPos}%`;
                 div.style.top = `${topPos}%`;
 
-                // 散文式数据块组装
+                const sealHtml = Math.random() > 0.6 ? `<span class="scatter-seal">${currentLang === 'zh' ? '法式' : 'RULE'}</span>` : '';
+                const descHtml = currentLang === 'zh' ? `以此构筑${comp}` : `Building with this${comp}`;
+
                 div.innerHTML = `
                     <div class="scatter-prefix">${verb}</div>
                     <div class="flex items-end">
-                        <span class="scatter-label">${label}</span>
-                        ${Math.random() > 0.6 ? '<span class="scatter-seal">法式</span>' : ''}
+                        <span class="scatter-label">${label}</span>${sealHtml}
                     </div>
                     <div class="scatter-value">${value}</div>
-                    <div class="scatter-desc">以此构筑${comp}</div>
+                    <div class="scatter-desc">${descHtml}</div>
                 `;
-                
                 container.appendChild(div);
             });
             
-            // 动态计算容器总高度，保证内容撑满 (最少 100vh，依据数据量递增)
             const requiredHeight = Math.max(120, allItems.length * 25);
             container.style.minHeight = `${requiredHeight}vh`;
-            
-            bindCursorEvents(); // 重新绑定悬浮光标
+            bindCursorEvents();
         }
 
-        /* ----------------------------------------------------
-           模块 6：全局 UI 渲染与打字机特效
-        ---------------------------------------------------- */
-        function renderUI(item, skipAnimation) {
-            if (currentTimer) clearInterval(currentTimer); 
-            currentData = item; 
+        // 统一渲染
+        async function renderUI(item, skipAnimation) {
+            if (currentTimer) clearInterval(currentTimer); currentData = item; 
+            const text = item.content ? (item.content[currentLang] || item.content.zh || "") : "";
+            const nameDisp = item.name ? (item.name[currentLang] || item.name.zh || "佚名") : "佚名";
             
-            const contentMap = item.content || {}; 
-            const text = contentMap[currentLang] || contentMap.zh || "古籍损毁，内容无法辨识，留于后人考证。";
-            const nameDisp = item.name ? (item.name[currentLang] || item.name.zh) : "佚名古建";
-            
-            // 1. 填充标题
             document.getElementById('target-name-1').innerText = nameDisp;
             
-            // 2. 渲染巨大背景水印 (取名字的字首尾)
-            const firstChar = nameDisp.charAt(0) || "史";
-            document.getElementById('bg-watermark-1').innerText = firstChar;
-            document.getElementById('bg-watermark-2').innerText = nameDisp.charAt(nameDisp.length-1) || "构";
+            // 水印 (英文模式下截取前几个字母)
+            if (currentLang === 'zh') {
+                document.getElementById('bg-watermark-1').innerText = nameDisp.charAt(0) || "史";
+                document.getElementById('bg-watermark-2').innerText = nameDisp.charAt(nameDisp.length-1) || "构";
+            } else {
+                document.getElementById('bg-watermark-1').innerText = nameDisp.substring(0, 2).toUpperCase() || "HI";
+                document.getElementById('bg-watermark-2').innerText = nameDisp.substring(0, 2).toUpperCase() || "AR";
+            }
             
-            // 3. 渲染营造法式散落排版
             updateScatteredFlow(item);
 
-            // 4. 渲染最后一张堪舆图 (卫星底图)
-            let lat = 39.916, lng = 116.390; // 默认故宫
+            // 卫星底图
+            let lat = 39.916, lng = 116.390; 
             if (item.academic_proof?.coordinates) { 
-                lat = item.academic_proof.coordinates.lat; 
-                lng = item.academic_proof.coordinates.lng; 
+                lat = item.academic_proof.coordinates.lat; lng = item.academic_proof.coordinates.lng; 
                 document.getElementById('geo-coords').innerText = `${lat.toFixed(4)} , ${lng.toFixed(4)}`;
-            } else {
-                document.getElementById('geo-coords').innerText = `无迹可寻，散于太虚`;
-            }
-            // 使用 Yandex 卫星图
+            } else { document.getElementById('geo-coords').innerText = currentLang === 'zh' ? `散于太虚` : `Unknown`; }
             document.getElementById('satellite-map').src = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=17&l=sat`;
 
-            // 5. 随机切换篇章一的古画拼贴图片，增强意境
-            const collageImgs = [
-                "https://images.unsplash.com/photo-1542856391-010fb87dcfed?q=80&w=800&auto=format&fit=crop", // 故宫角楼
-                "https://images.unsplash.com/photo-1583205739958-692b2d6cc5fb?q=80&w=800&auto=format&fit=crop", // 苏州园林
-                "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=800&auto=format&fit=crop", // 长城薄雾
-                "https://images.unsplash.com/photo-1574007557343-7f2a1eb3d5a4?q=80&w=800&auto=format&fit=crop"  // 古典飞檐
+            // 动态抓取维基百科图片！
+            const img1 = document.getElementById('collage-img-1');
+            const img2 = document.getElementById('collage-img-2');
+            
+            // 设置默认优美降级图
+            const fallbackImgs = [
+                "https://images.unsplash.com/photo-1542856391-010fb87dcfed?q=80&w=800&auto=format&fit=crop",
+                "https://images.unsplash.com/photo-1583205739958-692b2d6cc5fb?q=80&w=800&auto=format&fit=crop",
+                "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=800&auto=format&fit=crop",
+                "https://images.unsplash.com/photo-1574007557343-7f2a1eb3d5a4?q=80&w=800&auto=format&fit=crop"
             ];
-            document.getElementById('collage-img-1').src = collageImgs[Math.floor(Math.random() * collageImgs.length)];
-            document.getElementById('collage-img-2').src = collageImgs[Math.floor(Math.random() * collageImgs.length)];
+            
+            const searchName = item.name ? (item.name.zh || item.name.en || nameDisp) : nameDisp;
+            
+            // 异步获取，先给备用图
+            img1.src = fallbackImgs[Math.floor(Math.random() * fallbackImgs.length)];
+            img2.src = fallbackImgs[Math.floor(Math.random() * fallbackImgs.length)];
+            
+            fetchWikiImage(searchName).then(wikiUrl => {
+                if (wikiUrl) {
+                    img1.src = wikiUrl;
+                    // 如果有图，再稍微放大一点增加质感
+                    img1.classList.add('shadow-2xl');
+                }
+            });
 
-            // 6. 文献打字机特效
+            // 打字机
             const contentBox = document.getElementById('content-display');
             if (skipAnimation) { 
                 contentBox.innerHTML = text; 
             } else {
-                let i = 0;
-                contentBox.innerHTML = '<span class="cursor"></span>'; 
+                let i = 0; contentBox.innerHTML = '<span class="cursor-blink"></span>'; 
                 currentTimer = setInterval(() => { 
                     if (i < text.length) { 
-                        contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>'; 
+                        contentBox.innerHTML = text.substring(0, i + 1) + '<span class="cursor-blink"></span>'; 
                         i++; 
                     } else { 
                         clearInterval(currentTimer); 
-                        const cursor = contentBox.querySelector('.cursor'); 
-                        if (cursor) cursor.style.display = 'none'; 
+                        const cursorObj = contentBox.querySelector('.cursor-blink'); 
+                        if (cursorObj) cursorObj.style.display = 'none'; 
                     } 
-                }, 20); // 速度适中，如古人落笔
+                }, currentLang === 'en' ? 10 : 30); // 英文快一点
             }
         }
 
-        // 初始化启动入口
         function init() { 
             loadDynamicCacheList(); 
-            // 绑定回车键唤醒阵法
-            document.getElementById('searchInput').addEventListener('keypress', (e) => { 
-                if (e.key === 'Enter') executeHarvest(); 
-            }); 
+            document.getElementById('searchInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeHarvest(); }); 
         }
-        
         window.onload = init;
     </script>
 </body>
