@@ -193,134 +193,40 @@
 * 日志独立分表，不影响核心业务性能
 * 支持国密标识、星闪 ID、鸿蒙 ID、VIN 统一关联
 
-### 7.2 核心表结构及 DDL 实现
+环境配置：
 
-#### 1. vehicle（车辆信息表）
-存储车辆唯一身份、星闪 ID、鸿蒙 ID 绑定关系。包含字段：`id`, `vin`, `starflash_id`, `harmony_id`, `car_type`, `create_time`, `status`。
+---
 
-#### 2. parking_space（车位表）
-重点管理车位状态流转，防并发冲突。
-```sql
-CREATE TABLE `parking_space` (
-  `space_id` varchar(64) NOT NULL COMMENT '车位唯一编号',
-  `park_id` varchar(64) NOT NULL COMMENT '所属车场ID',
-  `floor` varchar(16) NOT NULL COMMENT '所在楼层，如 B1, B2',
-  `area` varchar(16) NOT NULL COMMENT '所在区域，如 A区, B区',
-  `x_coordinate` decimal(10,6) DEFAULT NULL COMMENT '定位X坐标',
-  `y_coordinate` decimal(10,6) DEFAULT NULL COMMENT '定位Y坐标',
-  `space_type` tinyint(4) NOT NULL DEFAULT '0' COMMENT '类型：0-普通, 1-充电, 2-无障碍',
-  `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态：0-空闲, 1-锁定(调度中), 2-占用, 3-故障',
-  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`space_id`),
-  KEY `idx_park_status` (`park_id`, `status`) COMMENT '用于快速检索空闲车位'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='车位信息表';
-3. park_order（停车订单主表）
-记录一次完整停车入场→计费→支付→离场的生命周期。
+## Installation
 
-SQL
-CREATE TABLE `park_order` (
-  `order_id` varchar(64) NOT NULL COMMENT '订单全局唯一ID',
-  `vin` varchar(64) NOT NULL COMMENT '车辆VIN码',
-  `park_id` varchar(64) NOT NULL COMMENT '车场ID',
-  `space_id` varchar(64) DEFAULT NULL COMMENT '最终停入的车位ID',
-  `entry_time` datetime NOT NULL COMMENT '入场开闸时间',
-  `park_start_time` datetime DEFAULT NULL COMMENT '实际入位(计费)时间',
-  `exit_time` datetime DEFAULT NULL COMMENT '离场时间',
-  `total_fee` decimal(10,2) DEFAULT '0.00' COMMENT '总计费金额',
-  `pay_status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '支付状态：0-未出账, 1-待支付, 2-已支付',
-  `order_status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '订单状态：0-进行中, 1-已完成, 2-异常',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`order_id`),
-  KEY `idx_vin_status` (`vin`, `order_status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='停车订单主表';
-4. 其他附属表说明
-parking_lot（车场表）： 基础信息、楼层、总车位、地图 JSON。
+### 1. Installing on the host machine (NS-3 仿真环境)
 
-starflash_device（星闪设备表）： 管理星闪网关、锚点位置与在线状态。
+**Step 1. Install prerequisites**
+在 Windows 11 的 WSL2 (Ubuntu) 环境下，首先安装必要的 C++ 编译环境：
 
-fee_rule（计费规则表）： 按车场配置免费时长、小时费、单日封顶规则。
-
-location_log / gate_log / pay_log： 定位轨迹、道闸操作、支付流水日志表。
-
-8. P0 核心测试用例
-星闪自动发现时延 ≤ 100ms
-
-身份认证通过 → 自动开闸
-
-新能源车辆优先分配充电位
-
-室内定位精度误差 ≤ 1 米
-
-车机导航路线正确及跳变抑制测试
-
-入位自动开始计费
-
-离场自动推送账单
-
-支付成功 → 自动开闸
-
-断网边缘本地可用性测试
-
-通信加密无明文泄露
-
-9. 项目里程碑
-M1（1–4 周）P0 核心上线： 星闪发现/定位、鸿蒙车机基础、车位分配、计费、无感支付。
-
-M2（5–8 周）P1 优化： 语音交互、发票、监控大屏、CV2X 预分配。
-
-M3（9–12 周）P2 扩展： 多车场联动、预约停车、自动泊车对接。
-
-10. 交付物清单
-需求规格说明书
-
-鸿蒙车机原子化服务包
-
-星闪 / 边缘 / 后端服务程序源代码
-
-运营管理后台系统
-
-API 接口文档与数据库字典
-
-测试报告与 NS-3 仿真数据
-
-部署 & 运维手册
-
-11. 附录 A：技术标准与参考链接
-星闪 NearLink 标准： 国际星闪联盟标准主页
-
-华为星闪开发文档： HarmonyOS NearLink Kit 开发指南
-
-鸿蒙车机开发规范： 原子化服务开发规范
-
-国密安全： SM2/SM3/SM4 算法标准及等保 2.0。
-
-12. 附录 B：NS-3 仿真与测试环境配置指南
-为了验证“毫秒级发现”及高并发等第一性原理设计，本项目采用 NS-3 进行底层通信仿真。以下为团队成员统一的环境配置标准。
-
-🛠️ 环境要求与准备
-操作系统： Windows 10/11，需开启 WSL2 (Ubuntu 子系统)。
-
-配置命令： 管理员权限运行 PowerShell 输入 wsl --install，完成后重启电脑。
-
-📦 安装依赖与编译源码
-在 Ubuntu 终端中依次执行：
-
-Bash
-# 1. 更新源并安装 C++ 构建依赖
+```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install g++ python3 python3-dev pkg-config sqlite3 cmake ninja-build git tar wget -y
-
-# 2. 下载并解压 NS-3.41
+```
+Step 2. Download and Build NS-3
+下载官方源码并进行全量编译：
+```bash
 wget [https://www.nsnam.org/releases/ns-allinone-3.41.tar.bz2](https://www.nsnam.org/releases/ns-allinone-3.41.tar.bz2)
 tar xfj ns-allinone-3.41.tar.bz2
 cd ns-allinone-3.41/ns-3.41
-
-# 3. 配置与全量编译 (该步骤耗时较长，请保持电脑供电)
 ./ns3 configure --enable-examples --enable-tests
 ./ns3 build
+```
+Step 3. Backend Services Build (核心服务端构建)
+使用 Docker 快速拉起本地边缘网关与核心数据库（包含 MySQL 与 Redis）：
+```
+docker-compose -f docker/docker-compose.yml up -d
+```
+Step 4.Quick Start
+Run the Communication Simulation (运行通信仿真)
+进入 NS-3 编译目录，一键执行智慧停车场景下的星闪连接与车位预分配仿真：
+```
+cd ns-allinone-3.41/ns-3.41
+./ns3 run scratch/smart-parking
+```
 
-# 4. 验证安装结果
-./ns3 run hello-simulator
-# 若输出 "Hello Simulator" 则代表环境配置成功！
-📂 脚本运行规范
-项目组专属的 C++ 仿真脚本统一存放在 ns-3.41/scratch/ 目录下。运行脚本时无需加 .cc 后缀（例如：./ns3 run scratch/smart-parking）。
