@@ -229,4 +229,8 @@ Run the Communication Simulation (运行通信仿真)
 cd ns-allinone-3.41/ns-3.41
 ./ns3 run scratch/smart-parking
 ```
+<img width="2559" height="862" alt="image" src="https://github.com/user-attachments/assets/3c1f60b7-b119-4b38-9155-0e4bc434be08" /> 
+环境配置成功实例
+
+
 
